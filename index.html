@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<title>lickilicky - easy to reference list of burpple beyond partners</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<style>
+body{
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  text-align: center;
+  cursor: default;
+  padding: 0 0 2em;
+  margin: 0;
+}
+header,
+footer{
+  padding: 0 1em;
+}
+h1{
+  font-weight: normal;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+h1 + p{
+  margin-top: 0;
+  padding-top: .2em;
+}
+#list{
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+}
+#list li{
+  display: inline-flex;
+  text-align: center;
+  vertical-align: top;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 120px;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+#list li.unavailable{
+  flex-direction: column;
+  align-items: center;
+  opacity: .35;
+  padding: 5px 10px;
+}
+#list li.unavailable *{
+  pointer-events: none;
+}
+#list li a{
+  width: 100%;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color .3s;
+  padding: 5px 10px;
+}
+#list li a *{
+  pointer-events: none;
+}
+#list li h2{
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+}
+</style>
+<header>
+  <h1>lickilicky</h1>
+  <p>Burpple Beyond Partners as of July 2018</p>
+</header>
+
+<ul id="list"></ul>
+
+<footer>
+  <p>Burpple Beyond data is extracted from public information from <a href="https://www.burpple.com/search/sg?q=Beyond">official Burpple Beyond website</a>. All Burpple Beyond content is © Burpple.</p>
+  <p>lickilicky is not affiliated with any of the establishments listed or Burpple in any way.</p>
+</footer>
+
+<script>
+var $list = document.getElementById('list');
+var xhr = new XMLHttpRequest();
+var data;
+xhr.onload = function(){
+  data = JSON.parse(this.responseText);
+  renderList();
+};
+xhr.open('GET', 'data/venues.min.json');
+xhr.send();
+var sortFuncs = {
+  name: function(a, b){
+    if (a.name > b.name) {
+      return 1
+    } else if (a.name < b.name) {
+      return -1
+    } else {
+      return 0
+    }
+  },
+  price: function(a,b) {
+    function extractPrice (formatted_price) {
+      return parseInt(formatted_price.match(/\d/g).join(''), 10) || 0
+    }
+    return extractPrice(a.formatted_price) - extractPrice(b.formatted_price)
+  }
+};
+function renderList(sort){
+  if (!data) return;
+  if (!data.data) return;
+  if (!sort) sort = 'name';
+  $list.innerHTML = data.data.sort(sortFuncs[sort]).map(function(d){
+    var name = d.name;
+    if (!name) return '<li class="unavailable">'
+    + '</li>';
+    return '<li class="available">'
+        + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
+          + '<h2>' + d.name + '</h2>'
+          + '<small>' + d.formatted_price + '</small>'
+        + '</a>'
+      + '</li>';
+  }).join('');
+};
+</script>

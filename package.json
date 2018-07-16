@@ -1,0 +1,8 @@
+{
+  "name": "lickilicky",
+  "version": "1.0.0",
+  "description": "track burpple beyond partners over time",
+  "main": "index.js",
+  "author": "Jared Tong <tongrhj@users.noreply.github.com>",
+  "license": "MIT"
+}
