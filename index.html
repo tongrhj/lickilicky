@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<title>lickilicky - easy to reference list of burpple beyond partners</title>
+<title>lickilicky - easy to reference list of FnB 1-for-1</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <style>
@@ -70,7 +70,7 @@ h1 + p{
 </style>
 <header>
   <h1>lickilicky</h1>
-  <p>Burpple Beyond Partners as of July 2018</p>
+  <p>Last Updated: 17 July 2018</p>
 </header>
 
 <ul id="list"></ul>
@@ -102,7 +102,8 @@ var sortFuncs = {
   },
   price: function(a,b) {
     function extractPrice (formatted_price) {
-      return parseInt(formatted_price.match(/\d/g).join(''), 10) || 0
+      var price = (formatted_price && formatted_price.match(/\d/g).join('')) || 0
+      return parseInt(price, 10)
     }
     return extractPrice(a.formatted_price) - extractPrice(b.formatted_price)
   }
@@ -118,7 +119,7 @@ function renderList(sort){
     return '<li class="available">'
         + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
           + '<h2>' + d.name + '</h2>'
-          + '<small>' + d.formatted_price + '</small>'
+          + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
         + '</a>'
       + '</li>';
   }).join('');
