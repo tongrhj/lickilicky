@@ -14,17 +14,22 @@ header,
 footer{
   padding: 0 1em;
 }
-h1{
-  font-weight: normal;
-  margin-bottom: 0;
-  padding-bottom: 0;
+header{
+  margin: 10px;
 }
-h1 + p{
-  margin-top: 0;
-  padding-top: .2em;
+header > div{
+  display: inline-flex;
+  text-align: center;
+  vertical-align: top;
+  align-items: stretch;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 200px;
+  box-sizing: border-box;
+  padding: 0 10px;
 }
 #list{
-  margin: 0;
+  margin: 20px 1em;
   padding: 0;
   list-style: none;
   text-align: center;
@@ -79,16 +84,20 @@ h1 + p{
   -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
 }
+@supports (not (backdrop-filter: blur(5px))) and (not (-webkit-backdrop-filter: blur(5px))) {
+  #controls {
+    background-color: rgba(255, 255, 255, .9);
+  }
+}
 #controls input{
   vertical-align: middle;
 }
 .button{
 	text-decoration:none;
 	color:#333333;
-	font-size:12px;
-	font-weight:bold;
+	font-size:smaller;
 	padding:0 15px;
-	line-height:32px;
+	line-height:24px;
 	height: auto;
 	display:inline-block;
 	text-align:center;
@@ -107,9 +116,8 @@ h1 + p{
 }
 </style>
 <header>
-  <h1>lickilicky</h1>
-  <p>Active Merchants: <span id="count"></span></p>
-  <p>Last Updated: 17 July 2018</p>
+  <div>Active Merchants: <span id="count"></span></div>
+  <div>Last Updated: 18 July 2018</div>
 </header>
 
 <ul id="list"></ul>
@@ -122,7 +130,8 @@ h1 + p{
 </div>
 
 <footer>
-  <p>Burpple Beyond data is extracted from public information from <a href="https://www.burpple.com/search/sg?q=Beyond">official Burpple Beyond website</a>. All Burpple Beyond content is © Burpple.</p>
+  <img src="assets/lickilicky.png" alt="lickilicky" width="31" height="33" />
+  <p>Burpple Beyond data is extracted from public information from <a href="https://www.burpple.com/search/sg?q=Beyond">official Burpple Beyond website</a>. All Burpple Beyond content is © Burpple. Lickilicky is © The Pokémon Company.</p>
   <p>lickilicky is not affiliated with any of the establishments listed or Burpple in any way.</p>
 </footer>
 
@@ -168,12 +177,11 @@ function renderListItem(d) {
   var name = d.name;
   if (!name) return '';
 
-  return '<li class="available">'
+  return (d.removed ? '<li class="unavailable">' : '<li class="available">')
     + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
       + '<h2>' + d.name + '</h2>'
       + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
-      + (d.newly_added ? '<br><div class="button pill green">new</div>' : '')
-      + (d.removed ? '<br><div class="button pill red">removed</div>' : '')
+      + (!d.removed && d.newly_added ? '<br><div class="button pill green">new</div>' : '')
     + '</a>'
   + '</li>';
 }
