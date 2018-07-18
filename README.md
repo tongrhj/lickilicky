@@ -7,6 +7,8 @@ Will allow for tracking over time in case merchants are added/removed without in
 
 Dev
 ---
+1. Retrieve new data (coming soon)
+2. Run `node ./scripts/parseVenueJson.js`
 1. `surge`
 
 Credits

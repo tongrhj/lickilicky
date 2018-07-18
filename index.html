@@ -82,9 +82,33 @@ h1 + p{
 #controls input{
   vertical-align: middle;
 }
+.button{
+	text-decoration:none;
+	color:#333333;
+	font-size:12px;
+	font-weight:bold;
+	padding:0 15px;
+	line-height:32px;
+	height: auto;
+	display:inline-block;
+	text-align:center;
+	background-color:#DDDDDD;
+}
+.button.pill{
+  -webkit-border-radius: 16px;
+  -moz-border-radius: 16px;
+  border-radius: 16px;
+}
+.button.green{
+	background-color:#4BC94D;
+}
+.button.red{
+	background-color:#E53C38;
+}
 </style>
 <header>
   <h1>lickilicky</h1>
+  <p>Active Merchants: <span id="count"></span></p>
   <p>Last Updated: 17 July 2018</p>
 </header>
 
@@ -93,6 +117,8 @@ h1 + p{
 <div id="controls">
   <label><input type="radio" name="sort" value="name" checked>Name</label>
   <label><input type="radio" name="sort" value="price">Price</label>
+  <label><input type="radio" name="sort" value="new">New</label>
+  <label><input type="radio" name="sort" value="removed">Removed</label>
 </div>
 
 <footer>
@@ -102,11 +128,13 @@ h1 + p{
 
 <script>
 var $list = document.getElementById('list');
+var $count = document.getElementById('count');
 var xhr = new XMLHttpRequest();
 var data;
 xhr.onload = function(){
   data = JSON.parse(this.responseText);
   renderList();
+  updateCount();
 };
 xhr.open('GET', 'data/venues.min.json');
 xhr.send();
@@ -126,13 +154,18 @@ var sortFuncs = {
       return parseInt(price, 10)
     }
     return extractPrice(a.formatted_price) - extractPrice(b.formatted_price)
+  },
+  new: function(a,b) {
+    return b.newly_added - a.newly_added
+  },
+  removed: function(a,b) {
+    return b.removed - a.removed
   }
 };
 function renderList(sort){
   if (!data) return;
-  if (!data.data) return;
   if (!sort) sort = 'name';
-  $list.innerHTML = data.data.sort(sortFuncs[sort]).map(function(d){
+  $list.innerHTML = data.sort(sortFuncs[sort]).map(function(d){
     var name = d.name;
     if (!name) return '<li class="unavailable">'
     + '</li>';
@@ -140,10 +173,16 @@ function renderList(sort){
         + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
           + '<h2>' + d.name + '</h2>'
           + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
+          + (d.newly_added ? '<br><div class="button pill green">new</div>' : '')
+          + (d.removed ? '<br><div class="button pill red">removed</div>' : '')
         + '</a>'
       + '</li>';
   }).join('');
 };
+function updateCount() {
+  if (!data) return;
+  $count.innerText = '' + data.length
+}
 var $controls = document.getElementById('controls');
 $controls.addEventListener('change', function(e){
   renderList(e.target.value);
