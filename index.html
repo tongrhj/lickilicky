@@ -154,30 +154,41 @@ var sortFuncs = {
       return parseInt(price, 10)
     }
     return extractPrice(a.formatted_price) - extractPrice(b.formatted_price)
-  },
-  new: function(a,b) {
-    return b.newly_added - a.newly_added
-  },
-  removed: function(a,b) {
-    return b.removed - a.removed
   }
 };
-function renderList(sort){
+var filterFuncs = {
+  new: function(a) {
+    return a.newly_added
+  },
+  removed: function(a) {
+    return a.removed
+  }
+}
+function renderListItem(d) {
+  var name = d.name;
+  if (!name) return '';
+
+  return '<li class="available">'
+    + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
+      + '<h2>' + d.name + '</h2>'
+      + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
+      + (d.newly_added ? '<br><div class="button pill green">new</div>' : '')
+      + (d.removed ? '<br><div class="button pill red">removed</div>' : '')
+    + '</a>'
+  + '</li>';
+}
+function renderList(fn) {
   if (!data) return;
-  if (!sort) sort = 'name';
-  $list.innerHTML = data.sort(sortFuncs[sort]).map(function(d){
-    var name = d.name;
-    if (!name) return '<li class="unavailable">'
-    + '</li>';
-    return '<li class="available">'
-        + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
-          + '<h2>' + d.name + '</h2>'
-          + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
-          + (d.newly_added ? '<br><div class="button pill green">new</div>' : '')
-          + (d.removed ? '<br><div class="button pill red">removed</div>' : '')
-        + '</a>'
-      + '</li>';
-  }).join('');
+  if (!fn) fn = 'name';
+
+  var content = ''
+  if (['name', 'price'].includes(fn)) {
+    content = data.sort(sortFuncs[fn])
+  } else {
+    content = data.filter(filterFuncs[fn])
+  }
+
+  $list.innerHTML = content.map(renderListItem).join('');
 };
 function updateCount() {
   if (!data) return;
