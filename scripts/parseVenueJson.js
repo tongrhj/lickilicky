@@ -16,6 +16,11 @@ const newData = data.data.map(function(d){
     newly_added: !existingData.find(function(venue){return venue.id == d.id}) || withinPastWeek(d.time_first_added),
     time_first_added: !existingData.find(function(venue){return venue.id == d.id}) ? Date.now() : Date.now() - 1728000000,
     removed: false,
+    location: {
+      longitude: d.location.longitude,
+      latitude: d.location.latitude,
+      neighbourhood: d.location.neighbourhood
+    }
   };
   return newD;
 });
@@ -28,6 +33,11 @@ const removedData = existingData.filter(function(venue){
     formatted_price: d.formatted_price,
     newly_added: false,
     removed: true,
+    location: {
+      longitude: d.location.longitude,
+      latitude: d.location.latitude,
+      neighbourhood: d.location.neighbourhood
+    }
   }
   return removedD;
 });

@@ -114,6 +114,9 @@ header > div{
 .button.red{
 	background-color:#E53C38;
 }
+.muted{
+  color:gray;
+}
 </style>
 <header>
   <div>Active Merchants: <span id="count"></span></div>
@@ -123,7 +126,8 @@ header > div{
 <ul id="list"></ul>
 
 <div id="controls">
-  <label><input type="radio" name="sort" value="name" checked>Name</label>
+  <label id="nearby" hidden><input type="radio" name="sort" value="nearby" checked>Nearby</label>
+  <label><input type="radio" name="sort" value="name">Name</label>
   <label><input type="radio" name="sort" value="price">Price</label>
   <label><input type="radio" name="sort" value="new">New</label>
   <label><input type="radio" name="sort" value="removed">Removed</label>
@@ -147,8 +151,9 @@ xhr.onload = function(){
 };
 xhr.open('GET', 'data/venues.min.json');
 xhr.send();
+var current = {}
 var sortFuncs = {
-  name: function(a, b){
+  name: function(a, b) {
     if (a.name > b.name) {
       return 1
     } else if (a.name < b.name) {
@@ -158,11 +163,38 @@ var sortFuncs = {
     }
   },
   price: function(a,b) {
-    function extractPrice (formatted_price) {
+    function extractPrice(formatted_price) {
       var price = (formatted_price && formatted_price.match(/\d/g).join('')) || 0
       return parseInt(price, 10)
     }
     return extractPrice(a.formatted_price) - extractPrice(b.formatted_price)
+  },
+  nearby: function(a,b) {
+    function haversineDistance(p1, p2) {
+      var atan2 = Math.atan2
+      var cos = Math.cos
+      var sin = Math.sin
+      var sqrt = Math.sqrt
+      var PI = Math.PI
+      var R = 6378137 // (mean) radius of Earth (meters)
+
+      function squared(x) { return x * x }
+      function toRad(x) { return x * PI / 180.0 }
+      var aLat = p1.latitude
+      var bLat = p2.latitude
+      var aLng = p1.longitude
+      var bLng = p2.longitude
+
+      var dLat = toRad(bLat - aLat)
+      var dLon = toRad(bLng - aLng)
+
+      var f = squared(sin(dLat / 2.0)) + cos(toRad(aLat)) * cos(toRad(bLat)) * squared(sin(dLon / 2.0))
+      var c = 2 * atan2(sqrt(f), sqrt(1 - f))
+
+      return R * c
+    }
+    var origin = {latitude: current.coords.latitude, longitude: current.coords.longitude}
+    return haversineDistance(origin,a.location) - haversineDistance(origin,b.location)
   }
 };
 var filterFuncs = {
@@ -181,22 +213,35 @@ function renderListItem(d) {
     + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
       + '<h2>' + d.name + '</h2>'
       + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
+      + '<br><small class="muted">' + d.location.neighbourhood + '</small>'
       + (!d.removed && d.newly_added ? '<br><div class="button pill green">new</div>' : '')
     + '</a>'
   + '</li>';
 }
 function renderList(fn) {
   if (!data) return;
-  if (!fn) fn = 'name';
-
+  if (!fn && ('geolocation' in navigator)) {
+    fn = 'nearby';
+  } else if (!fn) {
+    fn = 'name'
+  }
   var content = ''
   if (['name', 'price'].includes(fn)) {
     content = data.sort(sortFuncs[fn])
+    $list.innerHTML = content.map(renderListItem).join('');
+  } else if (fn === 'nearby') {
+    $list.innerHTML = '<marquee>loading...</marquee>'
+    // beware here be async !!
+    navigator.geolocation.getCurrentPosition(function(position) {
+      // usccess callback function
+      current = position
+      content = data.sort(sortFuncs[fn])
+      $list.innerHTML = content.map(renderListItem).join('');
+    }, function(err){$list.innerHTML = err.message}, {timeout:10000})
   } else {
     content = data.filter(filterFuncs[fn])
+    $list.innerHTML = content.map(renderListItem).join('');
   }
-
-  $list.innerHTML = content.map(renderListItem).join('');
 };
 function updateCount() {
   if (!data) return;
@@ -206,4 +251,8 @@ var $controls = document.getElementById('controls');
 $controls.addEventListener('change', function(e){
   renderList(e.target.value);
 }, true);
+if ('geolocation' in navigator) {
+  /* geolocation IS NOT available */
+  document.getElementById('nearby').removeAttribute('hidden')
+}
 </script>
