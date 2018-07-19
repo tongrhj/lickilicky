@@ -1,7 +1,7 @@
 lickilicy
 ===
 
-Easy to reference list of merchants offering 1-for-1 deals
+Easy to reference list of merchants offering 1-for-1 F&B deals in Singapore
 
 Will allow for tracking over time in case merchants are added/removed without informing subscribers (rude!)
 
