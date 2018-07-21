@@ -41,5 +41,6 @@ const removedData = existingData.filter(function(venue){
   }
   return removedD;
 });
-const minData = newData.concat(removedData)
-fs.writeFileSync('data/venues.min.json', JSON.stringify(minData));
+const minData = JSON.stringify(newData.concat(removedData))
+fs.writeFileSync('historical_data/parsed_data/parsed_venues_22July2018.min.json', minData);
+fs.writeFileSync('dist/data/venues.min.json', minData);

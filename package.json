@@ -4,5 +4,16 @@
   "description": "track burpple beyond partners over time",
   "main": "index.js",
   "author": "Jared Tong <tongrhj@users.noreply.github.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=8.8.1"
+  },
+  "scripts": {
+    "build": "node ./scripts/parseVenueJson.js && cp -R assets dist/assets && cp index.html dist/ && node ./scripts/updateLastUpdatedDate.js",
+    "deploy": "surge dist --domain https://lickilicky.surge.sh"
+  },
+  "devDependencies": {
+    "replace-in-file": "^3.4.0",
+    "surge": "^0.20.1"
+  }
 }
