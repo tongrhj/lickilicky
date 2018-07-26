@@ -8,8 +8,8 @@ Will allow for tracking over time in case merchants are added/removed without in
 Dev
 ---
 1. Retrieve new data (coming soon)
-2. Run `npm run build` (parse data, update last-updated-date)
-1. `npm run deploy`
+1. Run `npm run build` (parse data, update last-updated-date)
+1. Merge to Master. CircleCI will deploy
 
 Credits
 ---
