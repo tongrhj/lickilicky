@@ -148,8 +148,10 @@ var $list = document.getElementById('list');
 var $count = document.getElementById('count');
 var xhr = new XMLHttpRequest();
 var data;
+var rawData;
 xhr.onload = function(){
-  data = JSON.parse(this.responseText);
+  rawData = JSON.parse(this.responseText);
+  data = rawData.filter(filterFuncs['active'])
   renderList();
   updateCount();
 };
@@ -205,6 +207,12 @@ var filterFuncs = {
   new: function(a) {
     return a.newly_added
   },
+  knownPriceRange: function(a) {
+    return a.formatted_price
+  },
+  active: function(a) {
+    return !a.removed
+  },
   removed: function(a) {
     return a.removed
   }
@@ -213,17 +221,24 @@ function renderListItem(d) {
   var name = d.name;
   if (!name) return '';
 
+  var prettyRemovalDate;
+  if (d.removed && d.time_last_removed) {
+    prettyRemovalDate = new Date(d.time_last_removed)
+    prettyRemovalDate = prettyRemovalDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: '2-digit' })
+  }
+
   return (d.removed ? '<li class="unavailable">' : '<li class="available">')
     + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
       + '<h2>' + d.name + '</h2>'
       + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
       + '<br><small class="muted">' + d.location.neighbourhood + '</small>'
-      + (!d.removed && d.newly_added ? '<br><div class="button pill green">new</div>' : '')
+      + (d.newly_added ? '<br><div class="button pill green">new</div>' : '')
+      + (prettyRemovalDate ? ('<br><div class="button pill red">' + prettyRemovalDate + '</div>') : '')
     + '</a>'
   + '</li>';
 }
 function renderList(fn) {
-  if (!data) return;
+  if (!rawData || !data) return;
   if (!fn && ('geolocation' in navigator)) {
     fn = 'nearby';
   } else if (!fn) {
@@ -232,6 +247,9 @@ function renderList(fn) {
   var content = ''
   if (['name', 'price'].includes(fn)) {
     content = data.sort(sortFuncs[fn])
+    if (fn === 'price') {
+      content = content.filter(filterFuncs['knownPriceRange'])
+    }
     $list.innerHTML = content.map(renderListItem).join('');
   } else if (fn === 'nearby') {
     $list.innerHTML = '<marquee>loading...</marquee>'
@@ -242,6 +260,9 @@ function renderList(fn) {
       content = data.sort(sortFuncs[fn])
       $list.innerHTML = content.map(renderListItem).join('');
     }, function(err){$list.innerHTML = err.message}, {timeout:10000})
+  } else if (fn === 'removed') {
+    content = rawData.filter(filterFuncs[fn])
+    $list.innerHTML = content.map(renderListItem).join('');
   } else {
     content = data.filter(filterFuncs[fn])
     $list.innerHTML = content.map(renderListItem).join('');

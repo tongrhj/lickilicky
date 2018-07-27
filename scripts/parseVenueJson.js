@@ -37,6 +37,7 @@ const removedData = existingData.filter(function(venue){
     newly_added: false,
     time_first_added: d.time_first_added,
     removed: true,
+    time_last_removed: d.time_last_removed || Date.now(),
     location: {
       longitude: d.location.longitude,
       latitude: d.location.latitude,
