@@ -1,8 +1,8 @@
 'use strict';
 
 const fs = require('fs');
-const data = JSON.parse(fs.readFileSync('historical_data/venues_28July2018.json'));
-const existingData = JSON.parse(fs.readFileSync('historical_data/parsed_data/parsed_venues_27July2018.min.json'));
+const data = JSON.parse(fs.readFileSync('historical_data/venues_29July2018.json'));
+const existingData = JSON.parse(fs.readFileSync('historical_data/parsed_data/parsed_venues_28July2018.min.json'));
 
 const withinPastWeek = function(ms) {
   return ms >= Date.now() - 604800000
@@ -47,7 +47,7 @@ const removedData = existingData.filter(function(venue){
   return removedD;
 });
 const minData = JSON.stringify(newData.concat(removedData))
-fs.writeFile('historical_data/parsed_data/parsed_venues_28July2018.min.json', minData, (err) => {
+fs.writeFile('historical_data/parsed_data/parsed_venues_29July2018.min.json', minData, (err) => {
   if (err) throw err;
   console.log('parsed_venues saved!');
 });

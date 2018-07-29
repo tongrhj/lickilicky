@@ -6,7 +6,7 @@ const replace = require('replace-in-file');
 const options = {
   files: './dist/index.html',
   from: /<span id="last-updated-date">.*<\/span>/,
-  to: '<span id="last-updated-date">28 July 2018</span>',
+  to: '<span id="last-updated-date">29 July 2018</span>',
 };
 
 replace(options, (error, changes) => {
