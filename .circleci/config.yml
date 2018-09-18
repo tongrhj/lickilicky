@@ -31,3 +31,15 @@ jobs:
       - run: npm run build
 
       - run: ./node_modules/.bin/now dist --name lickilicky --token ${NOW_TOKEN} --public
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+    triggers:
+      - schedule:
+         cron: "30 9 * * 1-5"
+         filters:
+            branches:
+              only:
+                - master
