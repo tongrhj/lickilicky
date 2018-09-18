@@ -30,7 +30,7 @@ jobs:
 
       - run: npm run build
 
-      - run: ./node_modules/.bin/now dist --name lickilicky --token ${NOW_TOKEN} --public
+      - run: ./node_modules/.bin/now dist --name lickilicky --token ${NOW_TOKEN} --public && ./node_modules/.bin/now --token ${NOW_TOKEN} alias lickilicky && ./node_modules/.bin/now --token ${NOW_TOKEN} remove lickilicky --safe -y
 workflows:
   version: 2
   build-and-deploy:
