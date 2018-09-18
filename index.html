@@ -149,6 +149,7 @@ var $count = document.getElementById('count');
 var xhr = new XMLHttpRequest();
 var data;
 var rawData;
+var nearbyListCache;
 xhr.onload = function(){
   rawData = JSON.parse(this.responseText);
   data = rawData.filter(filterFuncs['active'])
@@ -256,9 +257,15 @@ function renderList(fn) {
     // beware here be async !!
     navigator.geolocation.getCurrentPosition(function(position) {
       // usccess callback function
-      current = position
-      content = data.sort(sortFuncs[fn])
-      $list.innerHTML = content.map(renderListItem).join('');
+      if (fn !== 'nearby') {
+        current = position
+        content = data.sort(sortFuncs[fn])
+        // deliberately do nothing to front-end
+        nearbyListCache = content.map(renderListItem).join('');
+      } else {
+        current = position
+        $list.innerHTML = nearbyListCache || data.sort(sortFuncs[fn]).map(renderListItem).join('');
+      }
     }, function(err){$list.innerHTML = err.message}, {timeout:10000})
   } else if (fn === 'removed') {
     content = rawData.filter(filterFuncs[fn])
