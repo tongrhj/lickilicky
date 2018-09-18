@@ -30,4 +30,4 @@ jobs:
 
       - run: npm run build
 
-      - run: npm run deploy
+      - run: ./node_modules/.bin/now dist --name lickilicky --token ${NOW_TOKEN} --public
