@@ -5,11 +5,9 @@ Easy to reference list of merchants offering 1-for-1 F&B deals in Singapore
 
 Will allow for tracking over time in case merchants are added/removed without informing subscribers (rude!)
 
-Dev
----
-1. Retrieve new data (coming soon)
-1. Run `npm run build` (parse data, update last-updated-date)
-1. Merge to Master. CircleCI will deploy
+`npm run build` retrieves the latest merchant data and compares it with the existing merchant data to build the diff
+
+CircleCI is scheduled to run every weekday, 6:30pm SGT
 
 Credits
 ---
