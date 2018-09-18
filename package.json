@@ -9,11 +9,12 @@
     "node": ">=8.8.1"
   },
   "scripts": {
-    "build": "mkdir -p dist/data && node ./scripts/parseVenueJson.js && cp -R assets dist/assets && cp index.html dist/ && node ./scripts/updateLastUpdatedDate.js",
+    "build": "mkdir -p dist/data && node ./scripts/parseVenueJson.js && cp -R assets dist/ && cp index.html dist/ && node ./scripts/updateLastUpdatedDate.js",
     "deploy": "surge dist --domain https://lickilicky.surge.sh",
     "test": "echo \"Error: no test specified.\""
   },
   "devDependencies": {
+    "got": "^9.2.2",
     "now": "^11.4.4",
     "replace-in-file": "^3.4.0",
     "surge": "^0.20.1"

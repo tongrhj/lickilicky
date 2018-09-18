@@ -1,14 +1,21 @@
 'use strict';
 
 const fs = require('fs');
-const data = JSON.parse(fs.readFileSync('historical_data/venues_18Sep2018.json'));
-const existingData = JSON.parse(fs.readFileSync('historical_data/parsed_data/parsed_venues_13Sep2018.min.json'));
+const got = require('got');
+
+(async () => {
+
+const latestDataResponse = await got(process.env.VENUE_URL, { json: true, headers: { 'user-agent': null } })
+const latestData = latestDataResponse.body
+
+const existingDataResponse = await got(process.env.PARSED_VENUE_URL, { json: true })
+const existingData = existingDataResponse.body
 
 const withinPastWeek = function(ms) {
   return ms >= Date.now() - 604800000
 }
 
-const newData = data.data.map(function(d){
+const newData = latestData.data.map(function(d){
   // Returns first matching Venue Object or undefined
   const existingVenue = existingData.find(function(venue){return venue.id == d.id})
 
@@ -47,11 +54,9 @@ const removedData = existingData.filter(function(venue){
   return removedD;
 });
 const minData = JSON.stringify(newData.concat(removedData))
-fs.writeFile('historical_data/parsed_data/parsed_venues_18Sep2018.min.json', minData, (err) => {
-  if (err) throw err;
-  console.log('parsed_venues saved!');
-});
 fs.writeFile('dist/data/venues.min.json', minData, (err) => {
   if (err) throw err;
   console.log('venues saved!');
 });
+
+})();
