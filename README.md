@@ -1,4 +1,4 @@
-lickilicy
+lickilicky
 ===
 
 Easy to reference list of merchants offering 1-for-1 F&B deals in Singapore
