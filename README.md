@@ -5,9 +5,14 @@ Easy to reference list of merchants offering 1-for-1 F&B deals in Singapore
 
 Will allow for tracking over time in case merchants are added/removed without informing subscribers (rude!)
 
-`npm run build` retrieves the latest merchant data and compares it with the existing merchant data to build the diff
+Magic happens during `npm run build`:
 
-CircleCI is scheduled to run every weekday, 6:30pm SGT
+* Copies relevant frontend files to `dist` folder
+* Retrieves the latest merchant data and compares it with the existing data to build the diff
+* Generates its output as `dist/venues.min.json` for frontend (`index.html`) to consume
+* Sends a notification to Telegram with the diff formatted for chat
+
+CircleCI is scheduled to run every weekday, 5:30pm SGT
 
 Credits
 ---

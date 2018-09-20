@@ -3,6 +3,8 @@
 const fs = require('fs');
 const got = require('got');
 
+const notifyTelegram = require('./notifyTelegram').default;
+
 (async () => {
 
 const latestDataResponse = await got(process.env.VENUE_URL, { json: true, headers: { 'user-agent': null } })
@@ -23,7 +25,7 @@ const newData = latestData.data.map(function(d){
     id: d.id,
     name: d.name,
     formatted_price: d.formatted_price,
-    newly_added: existingVenue ? withinPastWeek(existingVenue.time_first_added) : true,
+    newly_added: !existingVenue,
     time_first_added: existingVenue ? existingVenue.time_first_added : Date.now(),
     removed: false,
     location: {
@@ -59,4 +61,9 @@ fs.writeFile('dist/data/venues.min.json', minData, (err) => {
   console.log('venues saved!');
 });
 
+// Send Notifications
+const formatData = (data) => data.map(d => d.name)
+const venuesAddedSinceLastRun = newData.filter(d => d.newly_added)
+const venuesRemovedSinceLastRun = removedData.filter(d => d.time_last_removed > Date.now() - 600000)
+await notifyTelegram(formatData(venuesAddedSinceLastRun), formatData(venuesRemovedSinceLastRun))
 })();
