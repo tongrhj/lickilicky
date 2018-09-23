@@ -123,8 +123,8 @@ header > div{
 }
 </style>
 <header>
-  <div>Active Merchants: <span id="count"></span></div>
-  <div>Last Updated: <span id="last-updated-date">22 July 2018</span></div>
+  <div>Active Merchants:&nbsp;<span id="count">213</span></div>
+  <div>Last Updated:&nbsp;<span id="last-updated-date">Sep 23, 2018</span></div>
 </header>
 
 <section id="search">
@@ -152,18 +152,14 @@ var $list = document.getElementById('list');
 var $count = document.getElementById('count');
 var xhr = new XMLHttpRequest();
 var data;
-var rawData;
+var rawData; // data with removed items
+var formattedData; // data with filter/sort fn applied
 var currentlyViewedFn;
 var nearbyListCache;
 var searchIndex;
-xhr.onload = function(){
-  rawData = JSON.parse(this.responseText);
-  data = rawData.filter(filterFuncs['active'])
-  renderList();
-  updateCount();
-};
-xhr.open('GET', 'data/venues.min.json');
-xhr.send();
+var $controls = document.getElementById('controls');
+var $checkControl = document.querySelector('#controls input[type=radio]:checked')
+var $searchbox = document.getElementById('searchbox');
 var current = {}
 var sortFuncs = {
   name: function(a, b) {
@@ -232,17 +228,24 @@ function setupSearch () {
   searchIndex = elasticlunr(function () {
     this.addField('name');
     this.addField('formatted_price');
-    this.addField('neighbourhood');
+    this.addField('location_neighbourhood');
     this.setRef('id');
   });
 };
-function setDocsForSearch (searchData) {
+function setDocsForSearch(searchData) {
   searchData.forEach(function(searchDatum) {
     searchIndex.addDoc({
       "id": searchDatum.id,
       "name": searchDatum.name,
+      "newly_added": searchDatum.newly_added,
+      "time_first_added": searchDatum.time_first_added,
+      "removed": searchDatum.removed,
+      "time_last_removed": searchDatum.time_last_removed,
       "formatted_price": searchDatum.formatted_price,
-      "neighbourhood": searchDatum.location.neighbourhood
+      "location": {
+        "neighbourhood": searchDatum.location.neighbourhood
+      },
+      "location_neighbourhood": searchDatum.location.neighbourhood
     });
   });
 };
@@ -255,10 +258,10 @@ function debounce(fn) {
     clearTimeout(timeout);
     timeout = setTimeout(function() {
       fn.apply(ctx, args);
-    }, 100);
+    }, 300);
   };
 };
-function renderListItem(d) {
+function convertListItemToHTML(d) {
   var name = d.name;
   if (!name) return '';
 
@@ -278,75 +281,132 @@ function renderListItem(d) {
     + '</a>'
   + '</li>';
 }
-function renderList(fn) {
-  if (!rawData || !data) return;
-  if (!fn && ('geolocation' in navigator)) {
-    fn = 'nearby';
-  } else if (!fn) {
-    fn = 'name';
-  }
-  var content = ''
+function getPosition(options){
+  return new Promise(function(resolve, reject) {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options)
+  })
+};
+function asyncConvertListToHTML(fn) {
+  var htmlContent = ''
   if (['name', 'price'].includes(fn)) {
-    content = data.sort(sortFuncs[fn]);
+    formattedData = data.sort(sortFuncs[fn]);
     if (fn === 'price') {
-      content = content.filter(filterFuncs['knownPriceRange']);
+      formattedData = formattedData.filter(filterFuncs['knownPriceRange']);
     }
-    $list.innerHTML = content.map(renderListItem).join('');
+    htmlContent = formattedData.map(convertListItemToHTML).join('');
   } else if (fn === 'nearby') {
-    // beware here be async !!
-    if (nearbyListCache) {
-      content = data.sort(sortFuncs['nearby'])
-      $list.innerHTML = nearbyListCache;
+    if (nearbyListCache && nearbyListCache.length) {
+      formattedData = data.sort(sortFuncs['nearby'])
+      htmlContent = nearbyListCache;
     } else {
-      $list.innerHTML = '<marquee style="width:100%;">loading...</marquee>';
-      navigator.geolocation.getCurrentPosition(function(position) {
-        // success callback function
-        if (currentlyViewedFn !== 'nearby') {
-          current = position;
-          content = data.sort(sortFuncs[fn]);
-          // deliberately do nothing to front-end
-          nearbyListCache = content.map(renderListItem).join('');
-        } else {
-          current = position;
-          content = data.sort(sortFuncs[fn])
-          nearbyListCache = content.map(renderListItem).join('');
-          $list.innerHTML = nearbyListCache;
-        };
-      }, function(err){$list.innerHTML = err.message}, {timeout:10000});
+      $list.innerHTML = '<marquee>loading...</marquee>';
+      // beware here be async !!
+      // thread continues execution without waiting for cb !!
+      return getPosition({timeout:10000})
+        .then(function(position) {
+          // success callback function
+          if (currentlyViewedFn !== 'nearby') {
+            current = position;
+            formattedData = data.sort(sortFuncs[fn]);
+            nearbyListCache = formattedData.map(convertListItemToHTML).join('');
+          } else {
+            current = position;
+            formattedData = data.sort(sortFuncs[fn])
+            nearbyListCache = formattedData.map(convertListItemToHTML).join('');
+          };
+          return Promise.resolve(nearbyListCache)
+        })
+        .catch(function(err) {
+          if (currentlyViewedFn === 'nearby') {
+            $list.innerHTML = err
+          } else {
+            console.error(err)
+          }
+        });
     };
   } else if (fn === 'removed') {
-    content = rawData.filter(filterFuncs[fn]);
-    $list.innerHTML = content.map(renderListItem).join('');
+    formattedData = rawData.filter(filterFuncs[fn]);
+    htmlContent = formattedData.map(convertListItemToHTML).join('');
   } else {
-    content = data.filter(filterFuncs[fn])
-    $list.innerHTML = content.map(renderListItem).join('');
+    formattedData = data.filter(filterFuncs[fn])
+    htmlContent = formattedData.map(convertListItemToHTML).join('');
   }
-  setupSearch()
-  setDocsForSearch(content)
+  if (!htmlContent || !htmlContent.length) {
+    return Promise.resolve('No results found')
+  }
+  return Promise.resolve(htmlContent)
+}
+function renderListHTML(html) {
+  if (formattedData && formattedData.length) {
+    setupSearch();
+    setDocsForSearch(formattedData);
+  }
+  $list.innerHTML = html;
+}
+function asyncRenderList(fn) {
+  asyncConvertListToHTML(fn).then(function(results) {
+    renderListHTML(results)
+  })
 };
 function updateCount() {
   if (!data) return;
   $count.innerText = '' + data.length;
 }
 
+xhr.onload = function(){
+  rawData = JSON.parse(this.responseText);
+  data = rawData.filter(filterFuncs['active'])
+  if (!rawData || !data) {
+    renderListHTML('Failed to load data')
+    return;
+  }
+  updateCount();
+  var defaultFn = $checkControl.value
+  if (defaultFn === 'nearby') {
+    if ('geolocation' in navigator) {
+      currentlyViewedFn = 'nearby'
+    } else {
+      currentlyViewedFn = 'name'
+    }
+  } else {
+    currentlyViewedFn = defaultFn
+  }
+  asyncRenderList(currentlyViewedFn);
+};
+xhr.overrideMimeType("application/json");
+xhr.open('GET', 'data/venues.min.json');
+xhr.send();
+
 // Sort and Filter
-var $controls = document.getElementById('controls');
 $controls.addEventListener('change', function(e){
   currentlyViewedFn = e.target.value;
-  renderList(currentlyViewedFn);
+  asyncRenderList(currentlyViewedFn);
 }, true);
 if ('geolocation' in navigator) {
   document.getElementById('nearby').removeAttribute('hidden');
 }
 
 // Search
-var $searchbox = document.getElementById('searchbox');
 $searchbox.addEventListener('keyup', debounce(function () {
   var query = $searchbox.value
-  var results = null
-  if (query) {
-    results = searchIndex.search(query)
+  var results = []
+  if (query && query.length) {
+    results = searchIndex.search(query, {
+      fields: {
+        name: {boost: 2, expand: true},
+        location_neighbourhood: {boost:1, expand: true},
+        formatted_price: {expand: true}
+      }
+    })
+    if (results.length) {
+      var html = results.map(function(result) { return result.doc }).map(convertListItemToHTML).join('')
+      $list.innerHTML = html;
+    } else {
+      $list.innerHTML = 'No results found';
+    }
+  } else {
+    $checkControl = document.querySelector('#controls input[type=radio]:checked')
+    asyncRenderList($checkControl.value)
   }
-  $list.innerHTML = results.map(renderListItem).join('');
 }))
 </script>

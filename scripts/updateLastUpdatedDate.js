@@ -13,5 +13,9 @@ replace(options, (error, changes) => {
   if (error) {
     return console.error('Error occurred:', error);
   }
-  console.log('Updated date for files:', changes.join(', '));
+  if (changes.length) {
+    console.log('updateLastUpdateDate:', changes.join(', '));
+  } else {
+    console.log('updateLastUpdateDate: no update necessary')
+  }
 });
