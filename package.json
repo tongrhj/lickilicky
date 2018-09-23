@@ -10,7 +10,6 @@
   },
   "scripts": {
     "build": "mkdir -p dist/data && node ./scripts/parseVenueJson.js && cp -R assets dist/ && cp index.html dist/ && node ./scripts/updateLastUpdatedDate.js",
-    "deploy": "surge dist --domain https://lickilicky.surge.sh",
     "test": "echo \"Error: no test specified.\""
   },
   "devDependencies": {

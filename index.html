@@ -127,6 +127,10 @@ header > div{
   <div>Last Updated: <span id="last-updated-date">22 July 2018</span></div>
 </header>
 
+<section id="search">
+  <input type="search" id="searchbox" placeholder="search places to eat">
+</section>
+
 <ul id="list"></ul>
 
 <div id="controls">
@@ -142,15 +146,16 @@ header > div{
   <p>Burpple Beyond data is extracted from public information from <a href="https://www.burpple.com/search/sg?q=Beyond">official Burpple Beyond website</a>. All Burpple Beyond content is © Burpple. Lickilicky is © The Pokémon Company.</p>
   <p>lickilicky is not affiliated with any of the establishments listed or Burpple in any way.</p>
 </footer>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js"></script>
 <script>
 var $list = document.getElementById('list');
 var $count = document.getElementById('count');
 var xhr = new XMLHttpRequest();
 var data;
 var rawData;
-var activeViewFn;
+var currentlyViewedFn;
 var nearbyListCache;
+var searchIndex;
 xhr.onload = function(){
   rawData = JSON.parse(this.responseText);
   data = rawData.filter(filterFuncs['active'])
@@ -219,6 +224,40 @@ var filterFuncs = {
     return a.removed
   }
 }
+function setupSearch () {
+  if (!elasticlunr) {
+    console.error('Make sure elasticlunr loads before setupSearch');
+    return;
+  };
+  searchIndex = elasticlunr(function () {
+    this.addField('name');
+    this.addField('formatted_price');
+    this.addField('neighbourhood');
+    this.setRef('id');
+  });
+};
+function setDocsForSearch (searchData) {
+  searchData.forEach(function(searchDatum) {
+    searchIndex.addDoc({
+      "id": searchDatum.id,
+      "name": searchDatum.name,
+      "formatted_price": searchDatum.formatted_price,
+      "neighbourhood": searchDatum.location.neighbourhood
+    });
+  });
+};
+function debounce(fn) {
+  var timeout;
+  return function () {
+    var args = Array.prototype.slice.call(arguments),
+        ctx = this
+
+    clearTimeout(timeout);
+    timeout = setTimeout(function() {
+      fn.apply(ctx, args);
+    }, 100);
+  };
+};
 function renderListItem(d) {
   var name = d.name;
   if (!name) return '';
@@ -256,19 +295,21 @@ function renderList(fn) {
   } else if (fn === 'nearby') {
     // beware here be async !!
     if (nearbyListCache) {
+      content = data.sort(sortFuncs['nearby'])
       $list.innerHTML = nearbyListCache;
     } else {
       $list.innerHTML = '<marquee style="width:100%;">loading...</marquee>';
       navigator.geolocation.getCurrentPosition(function(position) {
         // success callback function
-        if (activeViewFn !== 'nearby') {
+        if (currentlyViewedFn !== 'nearby') {
           current = position;
           content = data.sort(sortFuncs[fn]);
           // deliberately do nothing to front-end
           nearbyListCache = content.map(renderListItem).join('');
         } else {
           current = position;
-          nearbyListCache = data.sort(sortFuncs[fn]).map(renderListItem).join('');
+          content = data.sort(sortFuncs[fn])
+          nearbyListCache = content.map(renderListItem).join('');
           $list.innerHTML = nearbyListCache;
         };
       }, function(err){$list.innerHTML = err.message}, {timeout:10000});
@@ -280,17 +321,32 @@ function renderList(fn) {
     content = data.filter(filterFuncs[fn])
     $list.innerHTML = content.map(renderListItem).join('');
   }
+  setupSearch()
+  setDocsForSearch(content)
 };
 function updateCount() {
   if (!data) return;
   $count.innerText = '' + data.length;
 }
+
+// Sort and Filter
 var $controls = document.getElementById('controls');
 $controls.addEventListener('change', function(e){
-  activeViewFn = e.target.value;
-  renderList(activeViewFn);
+  currentlyViewedFn = e.target.value;
+  renderList(currentlyViewedFn);
 }, true);
 if ('geolocation' in navigator) {
   document.getElementById('nearby').removeAttribute('hidden');
 }
+
+// Search
+var $searchbox = document.getElementById('searchbox');
+$searchbox.addEventListener('keyup', debounce(function () {
+  var query = $searchbox.value
+  var results = null
+  if (query) {
+    results = searchIndex.search(query)
+  }
+  $list.innerHTML = results.map(renderListItem).join('');
+}))
 </script>
