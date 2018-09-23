@@ -149,6 +149,7 @@ var $count = document.getElementById('count');
 var xhr = new XMLHttpRequest();
 var data;
 var rawData;
+var activeViewFn;
 var nearbyListCache;
 xhr.onload = function(){
   rawData = JSON.parse(this.responseText);
@@ -243,32 +244,37 @@ function renderList(fn) {
   if (!fn && ('geolocation' in navigator)) {
     fn = 'nearby';
   } else if (!fn) {
-    fn = 'name'
+    fn = 'name';
   }
   var content = ''
   if (['name', 'price'].includes(fn)) {
-    content = data.sort(sortFuncs[fn])
+    content = data.sort(sortFuncs[fn]);
     if (fn === 'price') {
-      content = content.filter(filterFuncs['knownPriceRange'])
+      content = content.filter(filterFuncs['knownPriceRange']);
     }
     $list.innerHTML = content.map(renderListItem).join('');
   } else if (fn === 'nearby') {
-    $list.innerHTML = '<marquee>loading...</marquee>'
     // beware here be async !!
-    navigator.geolocation.getCurrentPosition(function(position) {
-      // usccess callback function
-      if (fn !== 'nearby') {
-        current = position
-        content = data.sort(sortFuncs[fn])
-        // deliberately do nothing to front-end
-        nearbyListCache = content.map(renderListItem).join('');
-      } else {
-        current = position
-        $list.innerHTML = nearbyListCache || data.sort(sortFuncs[fn]).map(renderListItem).join('');
-      }
-    }, function(err){$list.innerHTML = err.message}, {timeout:10000})
+    if (nearbyListCache) {
+      $list.innerHTML = nearbyListCache;
+    } else {
+      $list.innerHTML = '<marquee style="width:100%;">loading...</marquee>';
+      navigator.geolocation.getCurrentPosition(function(position) {
+        // success callback function
+        if (activeViewFn !== 'nearby') {
+          current = position;
+          content = data.sort(sortFuncs[fn]);
+          // deliberately do nothing to front-end
+          nearbyListCache = content.map(renderListItem).join('');
+        } else {
+          current = position;
+          nearbyListCache = data.sort(sortFuncs[fn]).map(renderListItem).join('');
+          $list.innerHTML = nearbyListCache;
+        };
+      }, function(err){$list.innerHTML = err.message}, {timeout:10000});
+    };
   } else if (fn === 'removed') {
-    content = rawData.filter(filterFuncs[fn])
+    content = rawData.filter(filterFuncs[fn]);
     $list.innerHTML = content.map(renderListItem).join('');
   } else {
     content = data.filter(filterFuncs[fn])
@@ -277,14 +283,14 @@ function renderList(fn) {
 };
 function updateCount() {
   if (!data) return;
-  $count.innerText = '' + data.length
+  $count.innerText = '' + data.length;
 }
 var $controls = document.getElementById('controls');
 $controls.addEventListener('change', function(e){
-  renderList(e.target.value);
+  activeViewFn = e.target.value;
+  renderList(activeViewFn);
 }, true);
 if ('geolocation' in navigator) {
-  /* geolocation IS NOT available */
-  document.getElementById('nearby').removeAttribute('hidden')
+  document.getElementById('nearby').removeAttribute('hidden');
 }
 </script>
