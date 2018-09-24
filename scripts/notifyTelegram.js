@@ -39,7 +39,7 @@ const sendText = async (textResponse) => {
       return response
     }
 	} catch (error) {
-		console.log(error.response.body);
+		console.log(error);
 	}
 };
 
