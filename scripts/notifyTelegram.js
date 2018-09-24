@@ -2,6 +2,7 @@
 
 const got = require('got');
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
 
 const formatList = (list) => { return list.join(`
 `) }
@@ -33,7 +34,6 @@ const sendText = async (textResponse) => {
 	try {
     if (textResponse.length) {
       const endpoint = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&parse_mode=markdown&text=` + encodeURI(`${textResponse}`)
-      console.log(endpoint)
 		  const response = await got(endpoint);
 		  console.log(response.body);
       return response
