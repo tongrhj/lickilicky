@@ -9,13 +9,13 @@ const formatList = (list) => { return list.join(`
 
 const createVenueDiffResponse = (addedList, removedList) => {
   const addedResponse = !addedList.length ? '' : `—————————
-*Added Recently:*
+<b>Added Recently:</b>
 —————————
 ${formatList(addedList)}
 `
 
   const removedResponse = !removedList.length ? '' : `—————————
-*Removed Recently:*
+<b>Removed Recently:</b>
 —————————
 ${formatList(removedList)}
 `
@@ -33,7 +33,7 @@ ${formatList(removedList)}
 const sendText = async (textResponse) => {
 	try {
     if (textResponse.length) {
-      const endpoint = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&parse_mode=markdown&text=` + encodeURI(`${textResponse}`)
+      const endpoint = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&parse_mode=html&text=` + encodeURIComponent(`${textResponse}`)
 		  const response = await got(endpoint);
 		  console.log(response.body);
       return response
