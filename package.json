@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "got": "^9.2.2",
-    "now": "^11.4.4",
+    "now": "^11.4.6",
     "replace-in-file": "^3.4.0",
     "surge": "^0.20.1"
   }
