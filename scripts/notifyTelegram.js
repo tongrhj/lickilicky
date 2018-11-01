@@ -4,7 +4,9 @@ const got = require('got');
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
 
-const formatList = (list) => { return list.join(`
+const sample = (myArray) => { return myArray[Math.floor(Math.random() * myArray.length)] }
+
+const formatList = (list) => { return list.map(item => `${sample([🌭, 🥗, 🍔, 🍟, 🍻, 🍜])} ${item.name}`).join(`
 `) }
 
 const createVenueDiffResponse = (addedList, removedList) => {
@@ -20,9 +22,7 @@ ${formatList(addedList)}
 ${formatList(removedList)}
 `
 
-  const textResponse = [addedResponse, removedResponse].filter((text) => {
-    return text.length
-  }).join(`
+  const textResponse = [addedResponse, removedResponse].filter(text => text.length).join(`
 `)
 
   console.log(textResponse)
