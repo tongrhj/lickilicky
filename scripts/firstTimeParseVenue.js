@@ -30,12 +30,19 @@ const newData = latestData.data.map(function(d){
       longitude: d.location.longitude,
       latitude: d.location.latitude,
       neighbourhood: d.location.neighbourhood
-    }
+    },
+    banner_url: d.banner_url,
+    categories: d.categories,
+    deals: d.deals
   };
   return newD;
 });
 
 const newDataDeals = await Promise.all(newData.map(async (d) => {
+  if (d.banner_url && d.categories && d.deals) {
+    return d
+  }
+
   const response = await got(`https://app.burpple.com/p1/venues/${d.id}?auth_token=${process.env.BURPPLE_AUTH_TOKEN}`, { json: true, headers: { 'user-agent': null } })
   const data = response.body.data
 
@@ -75,7 +82,10 @@ const removedData = existingData.filter(function(venue){
       longitude: d.location.longitude,
       latitude: d.location.latitude,
       neighbourhood: d.location.neighbourhood
-    }
+    },
+    banner_url: d.banner_url || null,
+    categories: d.categories || null,
+    deals: d.deals || null
   }
   return removedD;
 });
