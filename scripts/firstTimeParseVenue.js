@@ -61,7 +61,7 @@ const newDataDeals = await Promise.all(newData.map(async (d) => {
 }))
 
 const removedData = existingData.filter(function(venue){
-  return !newData.find(function(d){return venue.id == d.id})
+  return !newDataDeals.find(function(d){return venue.id == d.id})
 }).map(function(d){
   const removedD = {
     id: d.id,
@@ -79,7 +79,7 @@ const removedData = existingData.filter(function(venue){
   }
   return removedD;
 });
-const minData = JSON.stringify(newData.concat(removedData))
+const minData = JSON.stringify(newDataDeals.concat(removedData))
 fs.writeFile('dist/data/venues.min.json', minData, (err) => {
   if (err) throw err;
   console.log('venues saved!');
@@ -87,13 +87,16 @@ fs.writeFile('dist/data/venues.min.json', minData, (err) => {
 
 // Send Notifications
 const formatData = (data) => data.map(d => {
-  name: d.name,
-  neighbourhood: d.location.neighbourhood,
-  banner_url: d.banner_url,
-  categories: d.categories,
-  deals: [...new Set(d.deals.map(item => item.title))].map(title => d.deals.find(el => el.title === title)) // Deals with unique titles only
+  return {
+    id: d.id,
+    name: d.name,
+    neighbourhood: d.location.neighbourhood,
+    banner_url: d.banner_url,
+    categories: d.categories,
+    deals: [...new Set(d.deals.map(item => item.title))].map(title => d.deals.find(el => el.title === title)) // Deals with unique titles only
+  }
 })
-const venuesAddedSinceLastRun = newData.filter(d => d.newly_added)
+const venuesAddedSinceLastRun = newDataDeals.filter(d => d.newly_added)
 const venuesRemovedSinceLastRun = removedData.filter(d => d.time_last_removed > Date.now() - 600000)
 await notifyTelegram(formatData(venuesAddedSinceLastRun), formatData(venuesRemovedSinceLastRun))
 })();

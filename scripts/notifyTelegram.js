@@ -6,7 +6,7 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
 
 const sample = (myArray) => { return myArray[Math.floor(Math.random() * myArray.length)] }
 
-const formatList = (list) => { return list.map(item => `${sample([🌭, 🥗, 🍔, 🍟, 🍻, 🍜])} ${item.name}`).join(`
+const formatList = (list) => { return list.map(item => `${sample(["🌭", "🥗", "🍔", "🍟", "🍻", "🍜"])} <a href="https://burpple.com/${item.id}">${item.name}</a>`).join(`
 `) }
 
 const createVenueDiffResponse = (addedList, removedList) => {
