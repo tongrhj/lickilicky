@@ -25,8 +25,10 @@ const newData = latestData.data.map(function(d){
     newly_added: !existingVenue,
     time_first_added: existingVenue ? existingVenue.time_first_added : Date.now(),
     removed: false,
+    dishes: d.dishes,
+    url: d.url,
     location: {
-      address: d.street,
+      address: `${d.location.street}` + (d.location.address_2 ? `, ${d.location.address_2}` : '') + ` ${d.location.zipcode}`,
       longitude: d.location.longitude,
       latitude: d.location.latitude,
       neighbourhood: d.location.neighbourhood
@@ -39,7 +41,7 @@ const newData = latestData.data.map(function(d){
 });
 
 const newDataDeals = await Promise.all(newData.map(async (d) => {
-  if (d.banner_url && d.categories && d.deals) {
+  if (d.dishes && d.dishes.length) {
     return d
   }
 
@@ -49,9 +51,7 @@ const newDataDeals = await Promise.all(newData.map(async (d) => {
   const banner_url = data.images[0].medium_url
   const categories = data.categories.map(c => c.name).filter(c2 => !c2.includes('Burpple'))
 
-  const beyondData = data.beyond
-
-  const deals = beyondData.redemptions.map((r) => {
+  const deals = data.beyond.redemptions.map((r) => {
     const deal = r.beyond_deal
     return {
       id: deal.id,
@@ -60,34 +60,31 @@ const newDataDeals = await Promise.all(newData.map(async (d) => {
     }
   })
 
+  const dishes = data.dishes.map((dish) => {
+    return {
+      name: dish.name,
+      formatted_price: dish.formatted_price
+    }
+  })
+
   return Object.assign(d, {
+    url: data.url,
     banner_url,
     categories,
+    dishes,
     deals
   })
 }))
 
 const removedData = existingData.filter(function(venue){
   return !newDataDeals.find(function(d){return venue.id == d.id})
-}).map(function(d){
-  const removedD = {
-    id: d.id,
-    name: d.name,
-    formatted_price: d.formatted_price,
+}).map((d) => {
+  return {
+    time_last_removed: Date.now(),
+    ...d,
     newly_added: false,
-    time_first_added: d.time_first_added,
-    removed: true,
-    time_last_removed: d.time_last_removed || Date.now(),
-    location: {
-      longitude: d.location.longitude,
-      latitude: d.location.latitude,
-      neighbourhood: d.location.neighbourhood
-    },
-    banner_url: d.banner_url || null,
-    categories: d.categories || null,
-    deals: d.deals || null
+    removed: true
   }
-  return removedD;
 });
 const minData = JSON.stringify(newDataDeals.concat(removedData))
 fs.writeFile('dist/data/venues.min.json', minData, (err) => {
@@ -100,9 +97,12 @@ const formatData = (data) => data.map(d => {
   return {
     id: d.id,
     name: d.name,
-    neighbourhood: d.location.neighbourhood,
+    location: d.location,
     banner_url: d.banner_url,
+    dishes: d.dishes,
+    url: d.url,
     categories: d.categories,
+    formatted_price: d.formatted_price,
     deals: [...new Set(d.deals.map(item => item.title))].map(title => d.deals.find(el => el.title === title)) // Deals with unique titles only
   }
 })
