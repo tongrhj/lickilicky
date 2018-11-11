@@ -52,7 +52,7 @@ exports.default = async (addedList, removedList) => {
 1-for-1: ${deals}
 
 ✅ ${venue.categories[0]}${dishes && dishes.length && `\n👍 ${dishes}`}
-📍 ${venue.location.address}
+📍 <a href="https://maps.apple.com/?sll=${venue.location.latitude},${venue.location.longitude}&z=10">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
 @burpplebeyond
