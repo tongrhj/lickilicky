@@ -27,13 +27,13 @@ const sendText = async (text, options = {}) => {
 const sendPhoto = async (photo, options = {}) => {
 	try {
     if (photo.length) {
-      const params = queryString.stringify({
+      const params = {
         chat_id: TELEGRAM_CHAT_ID,
         photo,
         ...options
-      })
+      }
       console.log(params)
-		  const response = await got(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto?${params}`)
+		  const response = await got(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto?${queryString.stringify(params)}`)
 		  console.log(response.body);
       return response
     }
