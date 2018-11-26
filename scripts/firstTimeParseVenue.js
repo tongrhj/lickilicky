@@ -51,14 +51,14 @@ const newDataDeals = await Promise.all(newData.map(async (d) => {
   const banner_url = data.images[0].medium_url
   const categories = data.categories.map(c => c.name).filter(c2 => !c2.includes('Burpple'))
 
-  const deals = data.beyond.redemptions.map((r) => {
+  const deals = data.beyond ? data.beyond.redemptions.map((r) => {
     const deal = r.beyond_deal
     return {
       id: deal.id,
       title: deal.title,
       max_savings: deal.formatted_max_savings
     }
-  })
+  }) : []
 
   const dishes = data.dishes.map((dish) => {
     return {
@@ -103,10 +103,18 @@ const formatData = (data) => data.map(d => {
     url: d.url,
     categories: d.categories,
     formatted_price: d.formatted_price,
-    deals: [...new Set(d.deals.map(item => item.title))].map(title => d.deals.find(el => el.title === title)) // Deals with unique titles only
+    deals: d.deals ? [...new Set(d.deals.map(item => item.title))].map(title => d.deals.find(el => el.title === title)) : [] // Deals with unique titles only
   }
 })
 const venuesAddedSinceLastRun = newDataDeals.filter(d => d.newly_added)
 const venuesRemovedSinceLastRun = removedData.filter(d => d.time_last_removed > Date.now() - 600000)
 await notifyTelegram(formatData(venuesAddedSinceLastRun), formatData(venuesRemovedSinceLastRun))
-})();
+})().catch(err => {
+  console.error(err.message);
+  throw err
+});
+
+process.on('unhandledRejection', (reason, p) => {
+  console.error(`Unhandled Rejection at: ${reason}`);
+  throw new Error(reason)
+});
