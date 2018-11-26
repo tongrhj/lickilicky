@@ -9,7 +9,7 @@
     "node": ">=8.8.1"
   },
   "scripts": {
-    "build": "mkdir -p dist/data && node ./scripts/firstTimeParseVenue.js && cp -R assets dist/ && cp index.html dist/ && node ./scripts/updateLastUpdatedDate.js",
+    "build": "mkdir -p dist/data && node ./scripts/firstTimeParseVenue.js && cp -R assets dist/ && cp index.html dist/ && cp now.json dist/ & node ./scripts/updateLastUpdatedDate.js",
     "test": "echo \"Error: no test specified.\""
   },
   "devDependencies": {
