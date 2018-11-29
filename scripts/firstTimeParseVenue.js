@@ -28,7 +28,7 @@ const newData = latestData.data.map(function(d){
     dishes: d.dishes,
     url: d.url,
     location: {
-      address: `${d.location.street}` + (d.location.address_2 ? `, ${d.location.address_2}` : '') + ` ${d.location.zipcode}`,
+      address: [d.location.address_2, d.location.street, d.location.zipcode].filter(Boolean).join(', '),
       longitude: d.location.longitude,
       latitude: d.location.latitude,
       neighbourhood: d.location.neighbourhood

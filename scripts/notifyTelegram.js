@@ -42,17 +42,28 @@ const sendPhoto = async (photo, options = {}) => {
 	}
 };
 
+// categories: Array<String>
+const selectCategories = (categories) => {
+  const bestCategory = categories[0]
+  const halalCategory = categories.find(ctg => ctg === 'Halal')
+  return [bestCategory, halalCategory].filter(Boolean).join(', ')
+}
+
 exports.default = async (addedList, removedList) => {
   // const diff = createVenueDiffResponse(addedList, removedList)
   const response = await Promise.all(addedList.map(async (venue) => {
     // No nesting of tags, see: https://core.telegram.org/bots/api#html-style
     const deals = venue.deals.map(deal => `${deal.title} (${deal.max_savings})`).join(', ')
     const dishes = venue.dishes.map(dish => `${dish.name} (${dish.formatted_price})`).join(', ')
+    const mapParams = {
+      api: 1, // required by Google
+      query: venue.name
+    }
     const caption = `✨ New: <strong>${venue.name}</strong> ✨
 1-for-1: ${deals}
 
-✅ ${venue.categories[0]}${dishes && dishes.length && `\n👍 ${dishes}`}
-📍 <a href="https://maps.apple.com/?sll=${venue.location.latitude},${venue.location.longitude}&z=10">${venue.location.address}</a>
+✅ ${selectCategories(venue.categories)}${dishes && dishes.length && `\n👍 ${dishes}`}
+📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(mapParams)}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
 @burpplebeyond
