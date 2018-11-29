@@ -244,6 +244,7 @@ function setDocsForSearch(searchData) {
       "time_first_added": searchDatum.time_first_added,
       "removed": searchDatum.removed,
       "time_last_removed": searchDatum.time_last_removed,
+      "category": searchDatum.caegories[0],
       "formatted_price": searchDatum.formatted_price,
       "location": {
         "neighbourhood": searchDatum.location.neighbourhood
@@ -275,8 +276,9 @@ function convertListItemToHTML(d) {
   }
 
   return (d.removed ? '<li class="unavailable">' : '<li class="available">')
-    + '<a href="https://www.burpple.com/search/sg?q=' + d.name + '" title="' + d.name + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
+    + '<a href="https://burpple.com/' + d.url + '" target="_blank" rel="noopener noreferrer" ontouchstart>'
       + '<h2>' + d.name + '</h2>'
+      + '<h3>' + d.categories[0] + '</h2>'
       + (d.formatted_price ? '<small>' + d.formatted_price + '</small>' : '')
       + '<br><small class="muted">' + d.location.neighbourhood + '</small>'
       + (d.newly_added ? '<br><div class="button pill green">new</div>' : '')
