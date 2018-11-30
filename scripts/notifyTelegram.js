@@ -26,17 +26,14 @@ const sendText = async (text, options = {}) => {
 
 const sendPhoto = async (photo, options = {}) => {
 	try {
-    if (photo.length) {
-      const params = {
-        chat_id: TELEGRAM_CHAT_ID,
-        photo,
-        ...options
-      }
-      console.log(params)
-		  const response = await got(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto?${queryString.stringify(params)}`)
-		  console.log(response.body);
-      return response
+    const params = {
+      chat_id: TELEGRAM_CHAT_ID,
+      photo,
+      ...options
     }
+    const response = await got(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto?${queryString.stringify(params)}`)
+    console.log(response.body);
+    return response
 	} catch (error) {
 		console.log(error);
 	}
@@ -62,20 +59,30 @@ exports.default = async (addedList, removedList) => {
     const caption = `✨ New: <strong>${venue.name}</strong> ✨
 1-for-1: ${deals}
 
-✅ ${selectCategories(venue.categories)}${dishes && dishes.length && `\n👍 ${dishes}`}
+${venue.categories && venue.categories.length ? `✅ ${selectCategories(venue.categories)}` : ''}${dishes && dishes.length ? `\n👍 ${dishes}` : ''}
 📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(mapParams)}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
 @burpplebeyond
 `
-    return await sendPhoto(
-      venue.banner_url,
-      {
-        disable_notification: true,
-        parse_mode: 'HTML',
-        caption: caption
-      }
-    )
+    if (venue.banner_url && venue.banner_url.length) {
+      return await sendPhoto(
+        venue.banner_url,
+        {
+          disable_notification: true,
+          parse_mode: 'HTML',
+          caption: caption
+        }
+      )
+    } else {
+      return await sendText(
+        caption, {
+          disable_notification: true,
+          disable_web_page_preview: true,
+          parse_mode: 'HTML'
+        }
+      )
+    }
   }))
 
   const removedResponse = await Promise.all(removedList.map(async (venue) => {
