@@ -23,6 +23,7 @@ const newData = latestData.data.map(function(d){
     name: d.name,
     formatted_price: d.formatted_price,
     newly_added: !existingVenue,
+    returning: existingVenue && existingVenue.removed,
     time_first_added: existingVenue ? existingVenue.time_first_added : Date.now(),
     removed: false,
     dishes: d.dishes,
@@ -103,12 +104,14 @@ const formatData = (data) => data.map(d => {
     url: d.url,
     categories: d.categories,
     formatted_price: d.formatted_price,
+    time_first_added: d.time_first_added,
     deals: d.deals ? [...new Set(d.deals.map(item => item.title))].map(title => d.deals.find(el => el.title === title)) : [] // Deals with unique titles only
   }
 })
 const venuesAddedSinceLastRun = newDataDeals.filter(d => d.newly_added)
+const venuesReturningSinceLastRun = newDataDeals.filter(d => d.returning)
 const venuesRemovedSinceLastRun = removedData.filter(d => d.time_last_removed > Date.now() - 600000)
-await notifyTelegram(formatData(venuesAddedSinceLastRun), formatData(venuesRemovedSinceLastRun))
+await notifyTelegram(formatData(venuesAddedSinceLastRun), formatData(venuesRemovedSinceLastRun), formatData(venuesReturningSinceLastRun))
 })().catch(err => {
   console.error(err.message);
   throw err
