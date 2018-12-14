@@ -14,8 +14,16 @@
   },
   "devDependencies": {
     "got": "^9.2.2",
+    "husky": "^1.2.1",
     "now": "^12.1.7",
+    "prettier": "^1.15.3",
+    "pretty-quick": "^1.8.0",
     "query-string": "^6.2.0",
     "replace-in-file": "^3.4.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   }
 }
