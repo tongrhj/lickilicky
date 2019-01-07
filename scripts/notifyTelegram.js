@@ -118,9 +118,7 @@ exports.default = async (addedList, removedList, returningList) => {
       return await sendText(
         `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
           venue.name
-        }</a>
-
-Tracked by @burpplebeyond for ${daysBetween(
+        }</a> has been removed from @burpplebeyond after ${daysBetween(
           venue.time_first_added,
           Date.now()
         )} days
