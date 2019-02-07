@@ -115,14 +115,13 @@ exports.default = async (addedList, removedList, returningList) => {
 
   const removedResponse = await Promise.all(
     removedList.map(async venue => {
+      const lagInDays = daysBetween(venue.time_first_added, Date.now());
       return await sendText(
         `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
           venue.name
-        }</a> has been removed from @burpplebeyond after ${daysBetween(
-          venue.time_first_added,
-          Date.now()
-        )} days
-`,
+        }</a> has been removed from @burpplebeyond after ${lagInDays} ${
+          lagInDays > 1 ? "days" : "days"
+        }`,
         {
           disable_notification: true,
           disable_web_page_preview: true,
