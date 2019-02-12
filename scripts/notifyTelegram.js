@@ -50,11 +50,29 @@ const sendPhoto = async (photo, options = {}) => {
   }
 };
 
+Array.prototype.contains = function(obj) {
+  return this.indexOf(obj) > -1;
+};
+
+const redundant = [
+  "1-for-1 Deals",
+  "Good For Groups",
+  "Supper",
+  "Late Night",
+  "Dinner with Drinks"
+];
+const mustInclude = ["Halal", "Newly Opened"];
+
 // categories: Array<String>
 const selectCategories = categories => {
-  const bestCategory = categories[0];
-  const halalCategory = categories.find(ctg => ctg === "Halal");
-  return [bestCategory, halalCategory].filter(Boolean).join(", ");
+  const contenders = categories.filter(ctg => !redundant.contains(ctg));
+  const mustIncludeCategories = categories.filter(ctg =>
+    mustInclude.contains(ctg)
+  );
+  const allCategories = [contenders[0], ...mustIncludeCategories].filter(
+    Boolean
+  );
+  return allCategories.join(", ");
 };
 
 const formatResponse = async (venue, status) => {
