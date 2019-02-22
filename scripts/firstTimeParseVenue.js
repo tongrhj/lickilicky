@@ -3,6 +3,14 @@
 const fs = require("fs");
 const got = require("got");
 const notifyTelegram = require("./notifyTelegram").default;
+const moment = require("moment");
+
+const getNestedObject = (nestedObj, pathArr) => {
+  return pathArr.reduce(
+    (obj, key) => (obj && obj[key] !== "undefined" ? obj[key] : undefined),
+    nestedObj
+  );
+};
 
 (async () => {
   const latestDataResponse = await got(process.env.VENUE_URL, {
@@ -46,7 +54,8 @@ const notifyTelegram = require("./notifyTelegram").default;
       },
       banner_url: d.banner_url,
       categories: d.categories,
-      deals: d.deals
+      deals: d.deals,
+      expiryDate: d.expiryDate
     };
     return newD;
   });
@@ -88,12 +97,28 @@ const notifyTelegram = require("./notifyTelegram").default;
         };
       });
 
+      const expiryString = getNestedObject(data, [
+        "beyond",
+        "venue_additional_info",
+        0,
+        "title"
+      ]);
+
+      const expiryDate = expiryDateText
+        ? moment(
+            expiryDateText.replace("All deals valid till ", ""),
+            "D MMM YYYY",
+            true
+          ).format("D MMM YYYY")
+        : null;
+
       return Object.assign(d, {
         url: data.url,
         banner_url,
         categories,
         dishes,
-        deals
+        deals,
+        expiryDate
       });
     })
   );
@@ -135,7 +160,8 @@ const notifyTelegram = require("./notifyTelegram").default;
           ? [...new Set(d.deals.map(item => item.title))].map(title =>
               d.deals.find(el => el.title === title)
             )
-          : [] // Deals with unique titles only
+          : [], // Deals with unique titles only
+        expiryDate: d.expiryDate
       };
     });
   const venuesAddedSinceLastRun = newDataDeals.filter(d => d.newly_added);
@@ -143,17 +169,26 @@ const notifyTelegram = require("./notifyTelegram").default;
   const venuesRemovedSinceLastRun = removedData.filter(
     d => d.time_last_removed > Date.now() - 600000
   );
+
+  const oneWeekFromNowEnd = moment()
+    .add(1, "weeks")
+    .endOf("day");
+  const oneWeekFromNowStart = moment()
+    .add(1, "weeks")
+    .startOf("day");
+  const venuesExpiring = newDataDeals.filter(d => {
+    if (d.expiryDate) {
+      const expires = moment(d.expiryDate, "D MMM YYYY", true);
+      return (
+        expires && oneWeekFromNowStart <= expires && expires < oneWeekFromNowEnd
+      );
+    }
+  });
+
   await notifyTelegram(
     formatData(venuesAddedSinceLastRun),
     formatData(venuesRemovedSinceLastRun),
-    formatData(venuesReturningSinceLastRun)
+    formatData(venuesReturningSinceLastRun),
+    formatData(venuesExpiring)
   );
-})().catch(err => {
-  console.error(err.message);
-  throw err;
-});
-
-process.on("unhandledRejection", (reason, p) => {
-  console.error(`Unhandled Rejection at: ${reason}`);
-  throw new Error(reason);
-});
+})();

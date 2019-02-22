@@ -121,8 +121,12 @@ ${
   }
 };
 
-exports.default = async (addedList, removedList, returningList) => {
-  // const diff = createVenueDiffResponse(addedList, removedList)
+exports.default = async (
+  addedList,
+  removedList,
+  returningList,
+  expiringList
+) => {
   const response = await Promise.all(
     addedList.map(async venue => await formatResponse(venue, "NEWLY_ADDED"))
   );
@@ -140,6 +144,23 @@ exports.default = async (addedList, removedList, returningList) => {
         }</a> has been removed from @burpplebeyond after ${lagInDays} ${
           lagInDays > 1 ? "days" : "days"
         }`,
+        {
+          disable_notification: true,
+          disable_web_page_preview: true,
+          parse_mode: "HTML"
+        }
+      );
+    })
+  );
+
+  const expiringResponse = await Promise.all(
+    expiringList.map(async venue => {
+      return await sendText(
+        `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
+          venue.name
+        }</a> while you still can! The current deals are valid till ${
+          venue.expiryDate
+        } on @burpplebeyond`,
         {
           disable_notification: true,
           disable_web_page_preview: true,
