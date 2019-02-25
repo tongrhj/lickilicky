@@ -104,9 +104,9 @@ const getNestedObject = (nestedObj, pathArr) => {
         "title"
       ]);
 
-      const expiryDate = expiryDateText
+      const expiryDate = expiryString
         ? moment(
-            expiryDateText.replace("All deals valid till ", ""),
+            expiryString.replace("All deals valid till ", ""),
             "D MMM YYYY",
             true
           ).format("D MMM YYYY")
@@ -191,4 +191,12 @@ const getNestedObject = (nestedObj, pathArr) => {
     formatData(venuesReturningSinceLastRun),
     formatData(venuesExpiring)
   );
-})();
+})().catch(err => {
+  console.error(err.message);
+  throw err;
+});
+
+process.on("unhandledRejection", (reason, p) => {
+  console.error(`Unhandled Rejection at: ${reason}`);
+  throw new Error(reason);
+});
