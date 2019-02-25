@@ -59,7 +59,8 @@ const redundant = [
   "Good For Groups",
   "Supper",
   "Late Night",
-  "Dinner with Drinks"
+  "Dinner with Drinks",
+  "Hidden Gem"
 ];
 const mustInclude = ["Halal", "Newly Opened"];
 
