@@ -4,7 +4,6 @@ const got = require("got");
 const queryString = require("query-string");
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const daysBetween = (then, now = Date.now()) => {
   const ONE_DAY = 1000 * 60 * 60 * 24; // 86,400,000
@@ -16,7 +15,6 @@ const sendText = async (text, options = {}) => {
     if (text.length) {
       const params = queryString.stringify({
         ...options,
-        chat_id: TELEGRAM_CHAT_ID,
         parse_mode: "html",
         text
       });
@@ -34,7 +32,6 @@ const sendText = async (text, options = {}) => {
 const sendPhoto = async (photo, options = {}) => {
   try {
     const params = {
-      chat_id: TELEGRAM_CHAT_ID,
       photo,
       ...options
     };
@@ -76,7 +73,8 @@ const selectCategories = categories => {
   return allCategories.join(", ");
 };
 
-const formatResponse = async (venue, status) => {
+const formatAndSendResponse = async (venue, status, options = {}) => {
+  const chat_id = options.chat_id;
   // No nesting of tags, see: https://core.telegram.org/bots/api#html-style
   const deals = venue.deals
     .map(deal => `${deal.title} (${deal.max_savings})`)
@@ -111,13 +109,15 @@ ${
     return await sendPhoto(venue.banner_url, {
       disable_notification: true,
       parse_mode: "HTML",
-      caption: caption
+      caption,
+      chat_id
     });
   } else {
     return await sendText(caption, {
       disable_notification: true,
       disable_web_page_preview: true,
-      parse_mode: "HTML"
+      parse_mode: "HTML",
+      chat_id
     });
   }
 };
@@ -126,49 +126,74 @@ exports.default = async (
   addedList,
   removedList,
   returningList,
-  expiringList
+  expiringList,
+  options = {}
 ) => {
   const response = await Promise.all(
-    addedList.map(async venue => await formatResponse(venue, "NEWLY_ADDED"))
+    options["chat_ids"]
+      .map(chat_id => {
+        addedList.map(
+          async venue =>
+            await formatAndSendResponse(venue, "NEWLY_ADDED", { chat_id })
+        );
+      })
+      .flat()
   );
 
   const returningReponse = await Promise.all(
-    returningList.map(async venue => await formatResponse(venue, "RETURNING"))
+    options["chat_ids"]
+      .map(chat_id => {
+        returningList.map(
+          async venue =>
+            await formatAndSendResponse(venue, "RETURNING", { chat_id })
+        );
+      })
+      .flat()
   );
 
   const removedResponse = await Promise.all(
-    removedList.map(async venue => {
-      const lagInDays = daysBetween(venue.time_first_added, Date.now());
-      return await sendText(
-        `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
-          venue.name
-        }</a> has been removed from @burpplebeyond after ${lagInDays} ${
-          lagInDays > 1 ? "days" : "days"
-        }`,
-        {
-          disable_notification: true,
-          disable_web_page_preview: true,
-          parse_mode: "HTML"
-        }
-      );
-    })
+    options["chat_ids"]
+      .map(chat_id => {
+        removedList.map(async venue => {
+          const lagInDays = daysBetween(venue.time_first_added, Date.now());
+          return await sendText(
+            `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
+              venue.name
+            }</a> has been removed from @burpplebeyond after ${lagInDays} ${
+              lagInDays > 1 ? "days" : "days"
+            }`,
+            {
+              disable_notification: true,
+              disable_web_page_preview: true,
+              parse_mode: "HTML",
+              chat_id
+            }
+          );
+        });
+      })
+      .flat()
   );
 
   const expiringResponse = await Promise.all(
-    expiringList.map(async venue => {
-      return await sendText(
-        `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
-          venue.name
-        }</a> while you still can! The current deals are valid till ${
-          venue.expiryDate
-        } on @burpplebeyond`,
-        {
-          disable_notification: true,
-          disable_web_page_preview: true,
-          parse_mode: "HTML"
-        }
-      );
-    })
+    options["chat_ids"]
+      .map(chat_id => {
+        expiringList.map(async venue => {
+          return await sendText(
+            `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
+              venue.name
+            }</a> while you still can! The current deals are valid till ${
+              venue.expiryDate
+            } on @burpplebeyond`,
+            {
+              disable_notification: true,
+              disable_web_page_preview: true,
+              parse_mode: "HTML",
+              chat_id
+            }
+          );
+        });
+      })
+      .flat()
   );
 
   return response;

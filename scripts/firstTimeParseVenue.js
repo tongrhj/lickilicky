@@ -5,6 +5,9 @@ const got = require("got");
 const notifyTelegram = require("./notifyTelegram").default;
 const moment = require("moment");
 
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const TELEGRAM_CHAT_ID_2 = process.env.TELEGRAM_CHAT_ID_2;
+
 const getNestedObject = (nestedObj, pathArr) => {
   return pathArr.reduce(
     (obj, key) => (obj && obj[key] !== "undefined" ? obj[key] : undefined),
@@ -189,7 +192,8 @@ const getNestedObject = (nestedObj, pathArr) => {
     formatData(venuesAddedSinceLastRun),
     formatData(venuesRemovedSinceLastRun),
     formatData(venuesReturningSinceLastRun),
-    formatData(venuesExpiring)
+    formatData(venuesExpiring),
+    { chat_ids: [TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2] }
   );
 })().catch(err => {
   console.error(err.message);
