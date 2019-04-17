@@ -3,6 +3,19 @@
 const got = require("got");
 const queryString = require("query-string");
 
+// Array.new().flat polyfill
+Object.defineProperty(Array.prototype, "flat", {
+  value: function(depth = 1) {
+    return this.reduce(function(flat, toFlatten) {
+      return flat.concat(
+        Array.isArray(toFlatten) && depth > 1
+          ? toFlatten.flat(depth - 1)
+          : toFlatten
+      );
+    }, []);
+  }
+});
+
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 
 const daysBetween = (then, now = Date.now()) => {
@@ -130,14 +143,14 @@ exports.default = async (
   options = {}
 ) => {
   const response = await Promise.all(
-    options["chat_ids"]
+    options.chat_ids
       .map(chat_id => {
         addedList.map(
           async venue =>
             await formatAndSendResponse(venue, "NEWLY_ADDED", { chat_id })
         );
       })
-      .flat()
+      .flat(1)
   );
 
   const returningReponse = await Promise.all(
@@ -148,7 +161,7 @@ exports.default = async (
             await formatAndSendResponse(venue, "RETURNING", { chat_id })
         );
       })
-      .flat()
+      .flat(1)
   );
 
   const removedResponse = await Promise.all(
@@ -171,7 +184,7 @@ exports.default = async (
           );
         });
       })
-      .flat()
+      .flat(1)
   );
 
   const expiringResponse = await Promise.all(
@@ -193,7 +206,7 @@ exports.default = async (
           );
         });
       })
-      .flat()
+      .flat(1)
   );
 
   return response;

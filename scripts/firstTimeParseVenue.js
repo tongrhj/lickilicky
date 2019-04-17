@@ -195,12 +195,4 @@ const getNestedObject = (nestedObj, pathArr) => {
     formatData(venuesExpiring),
     { chat_ids: [TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2] }
   );
-})().catch(err => {
-  console.error(err.message);
-  throw err;
-});
-
-process.on("unhandledRejection", (reason, p) => {
-  console.error(`Unhandled Rejection at: ${reason}`);
-  throw new Error(reason);
-});
+})();
