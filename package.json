@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "mkdir -p dist/data && node ./scripts/firstTimeParseVenue.js && cp -R assets dist/ && cp index.html dist/ && cp now.json dist/ && node ./scripts/updateLastUpdatedDate.js",
-    "test": "echo \"Error: no test specified.\""
+    "test": "prettier \"scripts/*.js\" --list-different",
+    "format": "prettier \"scripts/*.js\" --write"
   },
   "devDependencies": {
     "got": "^9.2.2",
