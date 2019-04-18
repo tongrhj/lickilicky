@@ -86,38 +86,122 @@ const selectCategories = categories => {
   return allCategories.join(", ");
 };
 
+// options:
+// chat_id
+// telegram api options like: disable_notification, disable_web_page_preview, etc.
 const formatAndSendResponse = async (venue, status, options = {}) => {
   const chat_id = options.chat_id;
-  // No nesting of tags, see: https://core.telegram.org/bots/api#html-style
-  const deals = venue.deals
-    .map(deal => `${deal.title} (${deal.max_savings})`)
-    .join(", ");
-  const dishes = venue.dishes
-    .map(dish => `${dish.name} (${dish.formatted_price})`)
-    .join(", ");
+
+  // Note to self: no nesting of tags, see: https://core.telegram.org/bots/api#html-style
+
   const mapParams = {
     api: 1, // required by Google
     query: venue.name
   };
-  const flavorText =
-    status === "NEWLY_ADDED"
-      ? `✨ New: <strong>${venue.name}</strong> ✨`
-      : `Welcome back 🎉 <strong>${venue.name}</strong> 🎉`;
-  const caption = `${flavorText}
+
+  let flavorText = "";
+  let deals = "";
+  let dishes = "";
+  let caption = "";
+  switch (status) {
+    case "NEWLY_ADDED":
+      flavorText = `✨ New: <strong>${venue.name}</strong> ✨`;
+      deals =
+        (venue.deals &&
+          venue.deals
+            .map(deal => `${deal.title} (${deal.max_savings})`)
+            .join(", ")) ||
+        "";
+      dishes =
+        (venue.dishes &&
+          venue.dishes
+            .map(dish => `${dish.name} (${dish.formatted_price})`)
+            .join(", ")) ||
+        "";
+      caption = `${flavorText}
 1-for-1: ${deals}
 
 ${
-    venue.categories && venue.categories.length
-      ? `✅ ${selectCategories(venue.categories)}`
-      : ""
-  }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
+        venue.categories && venue.categories.length
+          ? `✅ ${selectCategories(venue.categories)}`
+          : ""
+      }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
 📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(
-    mapParams
-  )}">${venue.location.address}</a>
+        mapParams
+      )}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
 @burpplebeyond
 `;
+      break;
+    case "RETURNING":
+      flavorText = `Welcome back 🎉 <strong>${venue.name}</strong> 🎉`;
+      deals =
+        (venue.deals &&
+          venue.deals
+            .map(deal => `${deal.title} (${deal.max_savings})`)
+            .join(", ")) ||
+        "";
+      dishes =
+        (venue.dishes &&
+          venue.dishes
+            .map(dish => `${dish.name} (${dish.formatted_price})`)
+            .join(", ")) ||
+        "";
+      caption = `${flavorText}
+1-for-1: ${deals}
+
+${
+        venue.categories && venue.categories.length
+          ? `✅ ${selectCategories(venue.categories)}`
+          : ""
+      }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
+📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(
+        mapParams
+      )}">${venue.location.address}</a>
+🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
+
+@burpplebeyond
+`;
+      break;
+    case "CHANGED_DEALS":
+      flavorText = `Fresh new deals at 💚 <strong>${venue.name}</strong> 💚`;
+
+      const newlyAddedDeals =
+        venue.deals
+          .filter(current =>
+            venue.previous_deals.every(prev => prev.id !== current.id)
+          )
+          .map(deal => `${deal.title} (${deal.max_savings})`)
+          .join(", ") || "";
+      const removedDeals =
+        venue.previous_deals
+          .filter(prev => venue.deals.every(current => current.id !== prev.id))
+          .map(deal => `${deal.title} (${deal.max_savings})`)
+          .join(", ") || "";
+
+      caption = `${flavorText}
+➕in: ${newlyAddedDeals}
+➖out: ${removedDeals}
+
+${
+        venue.categories && venue.categories.length
+          ? `✅ ${selectCategories(venue.categories)}`
+          : ""
+      }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
+📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(
+        mapParams
+      )}">${venue.location.address}</a>
+🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
+
+@burpplebeyond
+`;
+      break;
+    default:
+      console.error(`Unknown status: ${status}`);
+      break;
+  }
+
   if (venue.banner_url && venue.banner_url.length) {
     return await sendPhoto(venue.banner_url, {
       disable_notification: true,
@@ -140,6 +224,7 @@ exports.default = async (
   removedList,
   returningList,
   expiringList,
+  dealsChangedList,
   options = {}
 ) => {
   const response = await Promise.all(
@@ -205,6 +290,17 @@ exports.default = async (
             }
           );
         });
+      })
+      .flat(1)
+  );
+
+  const changedDealsResponse = await Promise.all(
+    options["chat_ids"]
+      .map(chat_id => {
+        dealsChangedList.map(
+          async venue =>
+            await formatAndSendResponse(venue, "CHANGED_DEALS", { chat_id })
+        );
       })
       .flat(1)
   );

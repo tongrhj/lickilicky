@@ -15,6 +15,10 @@ const getNestedObject = (nestedObj, pathArr) => {
   );
 };
 
+Array.prototype.contains = function(obj) {
+  return this.indexOf(obj) > -1;
+};
+
 (async () => {
   const latestDataResponse = await got(process.env.VENUE_URL, {
     json: true,
@@ -147,9 +151,14 @@ const getNestedObject = (nestedObj, pathArr) => {
   });
 
   // Send Notifications
-  const formatData = data =>
+  // options:
+  // includePreviousDeals: boolean - to see deals changed from what to what
+  const formatData = (data, options = {}) =>
     data.map(d => {
-      return {
+      const existingVenue = existingData.find(function(venue) {
+        return venue.id == d.id;
+      });
+      const defaultInfo = {
         id: d.id,
         name: d.name,
         location: d.location,
@@ -166,12 +175,35 @@ const getNestedObject = (nestedObj, pathArr) => {
           : [], // Deals with unique titles only
         expiryDate: d.expiryDate
       };
+
+      if (options.includePreviousDeals) {
+        defaultInfo.previous_deals = existingVenue.deals
+          ? [...new Set(existingVenue.deals.map(item => item.title))].map(
+              title => existingVenue.deals.find(el => el.title === title)
+            )
+          : [];
+      }
+
+      return defaultInfo;
     });
+
   const venuesAddedSinceLastRun = newDataDeals.filter(d => d.newly_added);
   const venuesReturningSinceLastRun = newDataDeals.filter(d => d.returning);
   const venuesRemovedSinceLastRun = removedData.filter(
     d => d.time_last_removed > Date.now() - 600000
   );
+
+  const venuesWithDealsChanged = newDataDeals.filter(d => {
+    if (d.newly_added || d.returning) {
+      return false;
+    }
+
+    const newDealIds = d.deals.map(deal => deal.id);
+    const existingVenue = existingData.find(venue => venue.id === d.id);
+    const existingVenueDealIds = existingVenue.deals.map(deal => deal.id);
+
+    return !newDealIds.every(dealId => existingVenueDealIds.contains(dealId));
+  });
 
   const oneWeekFromNowEnd = moment()
     .add(1, "weeks")
@@ -193,6 +225,7 @@ const getNestedObject = (nestedObj, pathArr) => {
     formatData(venuesRemovedSinceLastRun),
     formatData(venuesReturningSinceLastRun),
     formatData(venuesExpiring),
+    formatData(venuesWithDealsChanged, { includePreviousDeals: true }),
     { chat_ids: [TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2] }
   );
 })();
