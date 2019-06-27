@@ -194,6 +194,7 @@ Array.prototype.contains = function(obj) {
   );
 
   const venuesWithDealsChanged = newDataDeals.filter(d => {
+    return false; // TODO REMOVE HACK
     if (d.newly_added || d.returning) {
       return false;
     }
@@ -212,6 +213,7 @@ Array.prototype.contains = function(obj) {
     .add(1, "weeks")
     .startOf("day");
   const venuesExpiring = newDataDeals.filter(d => {
+    return false; // TODO REMOVE HACK
     if (d.expiryDate) {
       const expires = moment(d.expiryDate, "D MMM YYYY", true);
       return (
@@ -222,10 +224,10 @@ Array.prototype.contains = function(obj) {
 
   await notifyTelegram(
     formatData(venuesAddedSinceLastRun),
-    formatData([]),
+    formatData(venuesRemovedSinceLastRun),
     formatData(venuesReturningSinceLastRun),
-    formatData([]),
-    formatData([], { includePreviousDeals: true }),
+    formatData(venuesExpiring),
+    formatData(venuesWithDealsChanged, { includePreviousDeals: true }),
     { chat_ids: [TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2] }
   );
 })();
