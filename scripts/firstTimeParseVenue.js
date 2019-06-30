@@ -25,13 +25,11 @@ Array.prototype.contains = function(obj) {
     headers: { "user-agent": null }
   });
   const latestData = latestDataResponse.body;
-  // {meta: {"code":200}, data: [{"id":164979,"name":"5 Little Monkeys Cafe","formatted_price":"~$15/pax","beyond_partner":true,"beyond_newly_added":true,"open_now":true,"location":{"city":"Singapore","country":"Singapore","state":"","street":"20 Kallang Avenue","address_2":"#11-00 Pico Creative Centre","zipcode":"339411","latitude":1.3098178,"longitude":103.8650975,"neighbourhood":"Kallang"},"avatar":{"url":"https://s3.burpple.com/venues/cafe_logo_-cropped-_copy-png_164979_original?1537238727","medium_url":"https://s3.burpple.com/venues/cafe_logo_-cropped-_copy-png_164979_medium?1537238727","small_url":"https://s3.burpple.com/venues/cafe_logo_-cropped-_copy-png_164979_small?1537238727"}}}
 
   const existingDataResponse = await got(process.env.PARSED_VENUE_URL, {
     json: true
   });
   const existingData = existingDataResponse.body;
-  // [{"id":164979,"name":"5 Little Monkeys Cafe","formatted_price":"~$15/pax","newly_added":true,"time_first_added":1537864234970,"removed":false,"location":{"longitude":103.8650975,"latitude":1.3098178,"neighbourhood":"Kallang"}}]
 
   const newData = latestData.data.map(function(d) {
     // Returns first matching Venue Object or undefined
@@ -194,7 +192,6 @@ Array.prototype.contains = function(obj) {
   );
 
   const venuesWithDealsChanged = newDataDeals.filter(d => {
-    return false; // TODO REMOVE HACK
     if (d.newly_added || d.returning) {
       return false;
     }
@@ -210,24 +207,25 @@ Array.prototype.contains = function(obj) {
     .add(1, "weeks")
     .endOf("day");
   const oneWeekFromNowStart = moment()
-    .add(1, "weeks")
-    .startOf("day");
+    .add(6, "days")
+    .endOf("day");
   const venuesExpiring = newDataDeals.filter(d => {
-    return false; // TODO REMOVE HACK
     if (d.expiryDate) {
       const expires = moment(d.expiryDate, "D MMM YYYY", true);
       return (
-        expires && oneWeekFromNowStart <= expires && expires < oneWeekFromNowEnd
+        expires &&
+        expires >= oneWeekFromNowStart &&
+        expires <= oneWeekFromNowEnd
       );
     }
   });
 
   await notifyTelegram(
     formatData(venuesAddedSinceLastRun),
-    formatData(venuesRemovedSinceLastRun),
+    formatData([]),
     formatData(venuesReturningSinceLastRun),
     formatData(venuesExpiring),
-    formatData(venuesWithDealsChanged, { includePreviousDeals: true }),
-    { chat_ids: [TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2] }
+    formatData([], { includePreviousDeals: true }),
+    { chat_ids: [TELEGRAM_CHAT_ID] }
   );
 })();

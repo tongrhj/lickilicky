@@ -17,9 +17,9 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
       - run: npm install
 
@@ -40,8 +40,8 @@ workflows:
       - build
     triggers:
       - schedule:
-         cron: "00 1 * * 1-5"
-         filters:
+          cron: "00 1 * * *"
+          filters:
             branches:
               only:
                 - master
