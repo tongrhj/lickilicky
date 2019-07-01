@@ -222,10 +222,10 @@ Array.prototype.contains = function(obj) {
 
   await notifyTelegram(
     formatData(venuesAddedSinceLastRun),
-    formatData([]),
+    formatData(venuesRemovedSinceLastRun),
     formatData(venuesReturningSinceLastRun),
     formatData(venuesExpiring),
-    formatData([], { includePreviousDeals: true }),
+    formatData(venuesWithDealsChanged, { includePreviousDeals: true }),
     { chat_ids: [TELEGRAM_CHAT_ID] }
   );
 })();
