@@ -226,67 +226,72 @@ exports.default = async (
   dealsChangedList,
   options = {}
 ) => {
-  const messagesToSend = options.chat_ids
-    .map(chat_id => {
-      const sendNewlyAddedVenues = addedList.map(
-        async venue =>
-          await formatAndSendResponse(venue, "NEWLY_ADDED", { chat_id })
-      );
-
-      const sendReturningVenues = returningList.map(
-        async venue =>
-          await formatAndSendResponse(venue, "RETURNING", { chat_id })
-      );
-
-      const sendRemovedVenues = removedList.map(async venue => {
-        const lagInDays = daysBetween(venue.time_first_added, Date.now());
-        return await sendText(
-          `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
-            venue.name
-          }</a> has been removed from @burpplebeyond after ${lagInDays} ${
-            lagInDays > 1 ? "days" : "day"
-          }`,
-          {
-            disable_notification: true,
-            disable_web_page_preview: true,
-            parse_mode: "HTML",
-            chat_id
-          }
+  try {
+    const messagesToSend = options.chat_ids
+      .map(chat_id => {
+        const sendNewlyAddedVenues = addedList.map(
+          async venue =>
+            await formatAndSendResponse(venue, "NEWLY_ADDED", { chat_id })
         );
-      });
 
-      const sendExpiringVenues = expiringList.map(async venue => {
-        return await sendText(
-          `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
-            venue.name
-          }</a> while you still can! The current deals are valid till ${
-            venue.expiryDate
-          } on @burpplebeyond`,
-          {
-            disable_notification: true,
-            disable_web_page_preview: true,
-            parse_mode: "HTML",
-            chat_id
-          }
+        const sendReturningVenues = returningList.map(
+          async venue =>
+            await formatAndSendResponse(venue, "RETURNING", { chat_id })
         );
-      });
 
-      const sendChangedDeals = dealsChangedList.map(
-        async venue =>
-          await formatAndSendResponse(venue, "CHANGED_DEALS", { chat_id })
-      );
+        const sendRemovedVenues = removedList.map(async venue => {
+          const lagInDays = daysBetween(venue.time_first_added, Date.now());
+          return await sendText(
+            `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
+              venue.name
+            }</a> has been removed from @burpplebeyond after ${lagInDays} ${
+              lagInDays > 1 ? "days" : "day"
+            }`,
+            {
+              disable_notification: true,
+              disable_web_page_preview: true,
+              parse_mode: "HTML",
+              chat_id
+            }
+          );
+        });
 
-      return sendNewlyAddedVenues.concat(
-        sendReturningVenues,
-        sendRemovedVenues,
-        sendExpiringVenues,
-        sendChangedDeals
-      );
-    })
-    .flat(1);
+        const sendExpiringVenues = expiringList.map(async venue => {
+          return await sendText(
+            `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
+              venue.name
+            }</a> while you still can! The current deals are valid till ${
+              venue.expiryDate
+            } on @burpplebeyond`,
+            {
+              disable_notification: true,
+              disable_web_page_preview: true,
+              parse_mode: "HTML",
+              chat_id
+            }
+          );
+        });
 
-  // Each Promise already has a catch so Promise all shouldnt ever reject
-  const response = await Promise.all(messagesToSend);
+        const sendChangedDeals = dealsChangedList.map(
+          async venue =>
+            await formatAndSendResponse(venue, "CHANGED_DEALS", { chat_id })
+        );
 
-  return response;
+        return sendNewlyAddedVenues.concat(
+          sendReturningVenues,
+          sendRemovedVenues,
+          sendExpiringVenues,
+          sendChangedDeals
+        );
+      })
+      .flat(1);
+
+    // Each Promise already has a catch so Promise all shouldnt ever reject
+    const response = await Promise.all(messagesToSend);
+
+    return response;
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
 };
