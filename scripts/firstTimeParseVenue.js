@@ -4,6 +4,7 @@ const fs = require("fs");
 const got = require("got");
 const notifyTelegram = require("./notifyTelegram").default;
 const moment = require("moment");
+const { CookieJar } = require('tough-cookie');
 
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const TELEGRAM_CHAT_ID_2 = process.env.TELEGRAM_CHAT_ID_2;
@@ -29,7 +30,7 @@ Array.prototype.contains = function(obj) {
         json: true,
         headers: {
           "user-agent":
-            "Burpple Beyond Fans http://www.github.com/tongrhj/lickilicky"
+            "Burpple Beyond Fans https://t.me/burpplebeyond"
         }
       }
     );
@@ -39,6 +40,8 @@ Array.prototype.contains = function(obj) {
       json: true
     });
     const existingData = existingDataResponse.body;
+
+    const cookieJar = new CookieJar();
 
     const newData = latestData.data.map(function(d) {
       // Returns first matching Venue Object or undefined
@@ -74,68 +77,79 @@ Array.prototype.contains = function(obj) {
       return newD;
     });
 
-    const newDataDeals = await Promise.all(
-      newData.map(async d => {
-        if (d.dishes && d.dishes.length) {
-          return d;
+    let newDataDeals = []
+
+    const newDataDealsPromises = newData.map(d => async () => {
+      if (d.dishes && d.dishes.length) {
+        newDataDeals.push(d);
+      }
+
+      const response = await got(
+        `https://app.burpple.com/p1/venues/${d.id}?auth_token=${
+          process.env.BURPPLE_AUTH_TOKEN
+        }`,
+        {
+          json: true,
+          headers: {
+            "user-agent":
+              "Burpple Beyond Fans https://t.me/burpplebeyond"
+          },
+          cookieJar
         }
+      );
+      const data = response.body.data;
 
-        const response = await got(
-          `https://app.burpple.com/p1/venues/${d.id}?auth_token=${
-            process.env.BURPPLE_AUTH_TOKEN
-          }`,
-          { json: true, headers: { "user-agent": null } }
-        );
-        const data = response.body.data;
+      const banner_url = data.images[0].medium_url;
+      const categories = data.categories
+        .map(c => c.name)
+        .filter(c2 => !c2.includes("Burpple"));
 
-        const banner_url = data.images[0].medium_url;
-        const categories = data.categories
-          .map(c => c.name)
-          .filter(c2 => !c2.includes("Burpple"));
+      const deals = data.beyond
+        ? data.beyond.redemptions.map(r => {
+            const deal = r.beyond_deal;
+            return {
+              id: deal.id,
+              title: deal.title,
+              max_savings: deal.formatted_max_savings
+            };
+          })
+        : [];
 
-        const deals = data.beyond
-          ? data.beyond.redemptions.map(r => {
-              const deal = r.beyond_deal;
-              return {
-                id: deal.id,
-                title: deal.title,
-                max_savings: deal.formatted_max_savings
-              };
-            })
-          : [];
+      const dishes = data.dishes.map(dish => {
+        return {
+          name: dish.name,
+          formatted_price: dish.formatted_price
+        };
+      });
 
-        const dishes = data.dishes.map(dish => {
-          return {
-            name: dish.name,
-            formatted_price: dish.formatted_price
-          };
-        });
+      const expiryString = getNestedObject(data, [
+        "beyond",
+        "venue_additional_info",
+        0,
+        "title"
+      ]);
 
-        const expiryString = getNestedObject(data, [
-          "beyond",
-          "venue_additional_info",
-          0,
-          "title"
-        ]);
+      const expiryDate = expiryString
+        ? moment(
+            expiryString.replace("All deals valid till ", ""),
+            "D MMM YYYY",
+            true
+          ).format("D MMM YYYY")
+        : null;
 
-        const expiryDate = expiryString
-          ? moment(
-              expiryString.replace("All deals valid till ", ""),
-              "D MMM YYYY",
-              true
-            ).format("D MMM YYYY")
-          : null;
+      newDataDeals.push(Object.assign(d, {
+        url: data.url,
+        banner_url,
+        categories,
+        dishes,
+        deals,
+        expiryDate
+      }));
+    })
 
-        return Object.assign(d, {
-          url: data.url,
-          banner_url,
-          categories,
-          dishes,
-          deals,
-          expiryDate
-        });
-      })
-    );
+    for (const p of newDataDealsPromises) {
+      await p();
+    }
 
     const removedData = existingData
       .filter(function(venue) {
