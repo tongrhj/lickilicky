@@ -249,7 +249,7 @@ Array.prototype.contains = function(obj) {
       formatData(venuesReturningSinceLastRun),
       formatData(venuesExpiring),
       formatData(venuesWithDealsChanged, { includePreviousDeals: true }),
-      { chat_ids: [] }
+      { chat_ids: [TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2] }
     );
   } catch (e) {
     console.error(e);
