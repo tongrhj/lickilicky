@@ -6,7 +6,7 @@
   "author": "Jared Tong <tongrhj@users.noreply.github.com>",
   "license": "MIT",
   "engines": {
-    "node": ">=8.8.1"
+    "node": ">=12.16.1"
   },
   "repository": {
     "type": "git",
@@ -18,14 +18,14 @@
     "format": "prettier \"scripts/*.js\" --write"
   },
   "devDependencies": {
-    "got": "^9.2.2",
-    "husky": "^1.2.1",
+    "got": "^9.6.0",
+    "husky": "^1.3.1",
     "moment": "^2.24.0",
-    "now": "^16.1.2",
-    "prettier": "^1.15.3",
-    "pretty-quick": "^1.8.0",
-    "query-string": "^6.2.0",
-    "replace-in-file": "^3.4.0",
+    "now": "^16.7.3",
+    "prettier": "^2.0.0",
+    "pretty-quick": "^1.11.1",
+    "query-string": "^6.11.1",
+    "replace-in-file": "^3.4.4",
     "tough-cookie": "^3.0.1"
   },
   "husky": {
