@@ -218,6 +218,13 @@ ${
   }
 };
 
+const sanitizedVenues = venues => {
+  return venues.filter(ven => {
+    const lagInDays = daysBetween(ven.time_first_added, Date.now());
+    return lagInDays > 3;
+  });
+};
+
 exports.default = async (
   addedList,
   removedList,
@@ -239,38 +246,74 @@ exports.default = async (
             await formatAndSendResponse(venue, "RETURNING", { chat_id })
         );
 
-        const sendRemovedVenues = removedList.map(async venue => {
-          const lagInDays = daysBetween(venue.time_first_added, Date.now());
-          return await sendText(
-            `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
-              venue.name
-            }</a> has been removed from @burpplebeyond after ${lagInDays} ${
-              lagInDays > 1 ? "days" : "day"
-            }`,
-            {
+        let sendRemovedVenues = [];
+        const sanitizedRemovedVenues = sanitizedVenues(removedList);
+        if (sanitizedRemovedVenues.length > 3) {
+          const groupedLinks = sanitizedRemovedVenues
+            .map(
+              venue =>
+                `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
+            )
+            .join(`, `);
+          const text = `Farewell 👋 ${groupedLinks} have been removed from @burpplebeyond!`;
+          sendRemovedVenues.push(
+            sendText(text, {
               disable_notification: true,
               disable_web_page_preview: true,
               parse_mode: "HTML",
               chat_id
-            }
+            })
           );
-        });
+        } else {
+          sendRemovedVenues = sanitizedRemovedVenues.map(venue =>
+            sendText(
+              `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
+                venue.name
+              }</a> has been removed from @burpplebeyond after ${lagInDays} days`,
+              {
+                disable_notification: true,
+                disable_web_page_preview: true,
+                parse_mode: "HTML",
+                chat_id
+              }
+            )
+          );
+        }
 
-        const sendExpiringVenues = expiringList.map(async venue => {
-          return await sendText(
-            `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
-              venue.name
-            }</a> while you still can! The current deals are valid till ${
-              venue.expiryDate
-            } on @burpplebeyond`,
-            {
+        let sendExpiringVenures = [];
+        if (expiringList.length > 3) {
+          const groupedLinks = sanitizedRemovedVenues
+            .map(
+              venue =>
+                `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
+            )
+            .join(`, `);
+          const text = `🏃‍♀️ Hurry down to ${groupedLinks} while you still can! The current deals are expiring soon on @burpplebeyond`;
+          sendExpiringVenues.push(
+            sendText(text, {
               disable_notification: true,
               disable_web_page_preview: true,
               parse_mode: "HTML",
               chat_id
-            }
+            })
           );
-        });
+        } else {
+          sendExpiringVenues = expiringList.map(venue =>
+            sendText(
+              `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
+                venue.name
+              }</a> while you still can! The current deals are valid till ${
+                venue.expiryDate
+              } on @burpplebeyond`,
+              {
+                disable_notification: true,
+                disable_web_page_preview: true,
+                parse_mode: "HTML",
+                chat_id
+              }
+            )
+          );
+        }
 
         const sendChangedDeals = dealsChangedList.map(
           async venue =>

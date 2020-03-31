@@ -4,7 +4,7 @@ const fs = require("fs");
 const got = require("got");
 const notifyTelegram = require("./notifyTelegram").default;
 const moment = require("moment");
-const { CookieJar } = require('tough-cookie');
+const { CookieJar } = require("tough-cookie");
 
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const TELEGRAM_CHAT_ID_2 = process.env.TELEGRAM_CHAT_ID_2;
@@ -20,6 +20,12 @@ Array.prototype.contains = function(obj) {
   return this.indexOf(obj) > -1;
 };
 
+function sleep(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
 (async () => {
   try {
     const latestDataResponse = await got(
@@ -29,8 +35,7 @@ Array.prototype.contains = function(obj) {
       {
         json: true,
         headers: {
-          "user-agent":
-            "Burpple Beyond Fans https://t.me/burpplebeyond"
+          "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond"
         }
       }
     );
@@ -77,7 +82,7 @@ Array.prototype.contains = function(obj) {
       return newD;
     });
 
-    let newDataDeals = []
+    let newDataDeals = [];
 
     const newDataDealsPromises = newData.map(d => async () => {
       if (d.dishes && d.dishes.length) {
@@ -91,8 +96,7 @@ Array.prototype.contains = function(obj) {
         {
           json: true,
           headers: {
-            "user-agent":
-              "Burpple Beyond Fans https://t.me/burpplebeyond"
+            "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond"
           },
           cookieJar
         }
@@ -137,15 +141,17 @@ Array.prototype.contains = function(obj) {
           ).format("D MMM YYYY")
         : null;
 
-      newDataDeals.push(Object.assign(d, {
-        url: data.url,
-        banner_url,
-        categories,
-        dishes,
-        deals,
-        expiryDate
-      }));
-    })
+      newDataDeals.push(
+        Object.assign(d, {
+          url: data.url,
+          banner_url,
+          categories,
+          dishes,
+          deals,
+          expiryDate
+        })
+      );
+    });
 
     for (const p of newDataDealsPromises) {
       await p();
