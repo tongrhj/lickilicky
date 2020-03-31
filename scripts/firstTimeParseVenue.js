@@ -16,12 +16,12 @@ const getNestedObject = (nestedObj, pathArr) => {
   );
 };
 
-Array.prototype.contains = function(obj) {
+Array.prototype.contains = function (obj) {
   return this.indexOf(obj) > -1;
 };
 
 function sleep(ms) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
@@ -29,28 +29,26 @@ function sleep(ms) {
 (async () => {
   try {
     const latestDataResponse = await got(
-      `https://app.burpple.com/p1/beyond/venues?auth_token=${
-        process.env.BURPPLE_AUTH_TOKEN
-      }`,
+      `https://app.burpple.com/p1/beyond/venues?auth_token=${process.env.BURPPLE_AUTH_TOKEN}`,
       {
         json: true,
         headers: {
-          "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond"
-        }
+          "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond",
+        },
       }
     );
     const latestData = latestDataResponse.body;
 
     const existingDataResponse = await got(process.env.PARSED_VENUE_URL, {
-      json: true
+      json: true,
     });
     const existingData = existingDataResponse.body;
 
     const cookieJar = new CookieJar();
 
-    const newData = latestData.data.map(function(d) {
+    const newData = latestData.data.map(function (d) {
       // Returns first matching Venue Object or undefined
-      const existingVenue = existingData.find(function(venue) {
+      const existingVenue = existingData.find(function (venue) {
         return venue.id == d.id;
       });
 
@@ -72,57 +70,55 @@ function sleep(ms) {
             .join(", "),
           longitude: d.location.longitude,
           latitude: d.location.latitude,
-          neighbourhood: d.location.neighbourhood
+          neighbourhood: d.location.neighbourhood,
         },
         banner_url: d.banner_url,
         categories: d.categories,
         deals: d.deals,
-        expiryDate: d.expiryDate
+        expiryDate: d.expiryDate,
       };
       return newD;
     });
 
     let newDataDeals = [];
 
-    const newDataDealsPromises = newData.map(d => async () => {
+    const newDataDealsPromises = newData.map((d) => async () => {
       if (d.dishes && d.dishes.length) {
         newDataDeals.push(d);
       }
 
       const response = await got(
-        `https://app.burpple.com/p1/venues/${d.id}?auth_token=${
-          process.env.BURPPLE_AUTH_TOKEN
-        }`,
+        `https://app.burpple.com/p1/venues/${d.id}?auth_token=${process.env.BURPPLE_AUTH_TOKEN}`,
         {
           json: true,
           headers: {
-            "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond"
+            "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond",
           },
-          cookieJar
+          cookieJar,
         }
       );
       const data = response.body.data;
 
       const banner_url = data.images[0].medium_url;
       const categories = data.categories
-        .map(c => c.name)
-        .filter(c2 => !c2.includes("Burpple"));
+        .map((c) => c.name)
+        .filter((c2) => !c2.includes("Burpple"));
 
       const deals = data.beyond
-        ? data.beyond.redemptions.map(r => {
+        ? data.beyond.redemptions.map((r) => {
             const deal = r.beyond_deal;
             return {
               id: deal.id,
               title: deal.title,
-              max_savings: deal.formatted_max_savings
+              max_savings: deal.formatted_max_savings,
             };
           })
         : [];
 
-      const dishes = data.dishes.map(dish => {
+      const dishes = data.dishes.map((dish) => {
         return {
           name: dish.name,
-          formatted_price: dish.formatted_price
+          formatted_price: dish.formatted_price,
         };
       });
 
@@ -130,7 +126,7 @@ function sleep(ms) {
         "beyond",
         "venue_additional_info",
         0,
-        "title"
+        "title",
       ]);
 
       const expiryDate = expiryString
@@ -148,7 +144,7 @@ function sleep(ms) {
           categories,
           dishes,
           deals,
-          expiryDate
+          expiryDate,
         })
       );
     });
@@ -158,21 +154,21 @@ function sleep(ms) {
     }
 
     const removedData = existingData
-      .filter(function(venue) {
-        return !newDataDeals.find(function(d) {
+      .filter(function (venue) {
+        return !newDataDeals.find(function (d) {
           return venue.id == d.id;
         });
       })
-      .map(d => {
+      .map((d) => {
         return {
           time_last_removed: Date.now(),
           ...d,
           newly_added: false,
-          removed: true
+          removed: true,
         };
       });
     const minData = JSON.stringify(newDataDeals.concat(removedData));
-    fs.writeFile("dist/data/venues.min.json", minData, err => {
+    fs.writeFile("dist/data/venues.min.json", minData, (err) => {
       if (err) throw err;
       console.log("venues saved!");
     });
@@ -181,8 +177,8 @@ function sleep(ms) {
     // options:
     // includePreviousDeals: boolean - to see deals changed from what to what
     const formatData = (data, options = {}) =>
-      data.map(d => {
-        const existingVenue = existingData.find(function(venue) {
+      data.map((d) => {
+        const existingVenue = existingData.find(function (venue) {
           return venue.id == d.id;
         });
         const defaultInfo = {
@@ -196,17 +192,19 @@ function sleep(ms) {
           formatted_price: d.formatted_price,
           time_first_added: d.time_first_added,
           deals: d.deals
-            ? [...new Set(d.deals.map(item => item.title))].map(title =>
-                d.deals.find(el => el.title === title)
+            ? [...new Set(d.deals.map((item) => item.title))].map((title) =>
+                d.deals.find((el) => el.title === title)
               )
             : [], // Deals with unique titles only
-          expiryDate: d.expiryDate
+          expiryDate: d.expiryDate,
         };
 
         if (options.includePreviousDeals) {
           defaultInfo.previous_deals = existingVenue.deals
-            ? [...new Set(existingVenue.deals.map(item => item.title))].map(
-                title => existingVenue.deals.find(el => el.title === title)
+            ? [
+                ...new Set(existingVenue.deals.map((item) => item.title)),
+              ].map((title) =>
+                existingVenue.deals.find((el) => el.title === title)
               )
             : [];
         }
@@ -214,31 +212,29 @@ function sleep(ms) {
         return defaultInfo;
       });
 
-    const venuesAddedSinceLastRun = newDataDeals.filter(d => d.newly_added);
-    const venuesReturningSinceLastRun = newDataDeals.filter(d => d.returning);
+    const venuesAddedSinceLastRun = newDataDeals.filter((d) => d.newly_added);
+    const venuesReturningSinceLastRun = newDataDeals.filter((d) => d.returning);
     const venuesRemovedSinceLastRun = removedData.filter(
-      d => d.time_last_removed > Date.now() - 600000
+      (d) => d.time_last_removed > Date.now() - 600000
     );
 
-    const venuesWithDealsChanged = newDataDeals.filter(d => {
+    const venuesWithDealsChanged = newDataDeals.filter((d) => {
       if (d.newly_added || d.returning) {
         return false;
       }
 
-      const newDealIds = d.deals.map(deal => deal.id);
-      const existingVenue = existingData.find(venue => venue.id === d.id);
-      const existingVenueDealIds = existingVenue.deals.map(deal => deal.id);
+      const newDealIds = d.deals.map((deal) => deal.id);
+      const existingVenue = existingData.find((venue) => venue.id === d.id);
+      const existingVenueDealIds = existingVenue.deals.map((deal) => deal.id);
 
-      return !newDealIds.every(dealId => existingVenueDealIds.contains(dealId));
+      return !newDealIds.every((dealId) =>
+        existingVenueDealIds.contains(dealId)
+      );
     });
 
-    const oneWeekFromNowEnd = moment()
-      .add(1, "weeks")
-      .endOf("day");
-    const oneWeekFromNowStart = moment()
-      .add(6, "days")
-      .endOf("day");
-    const venuesExpiring = newDataDeals.filter(d => {
+    const oneWeekFromNowEnd = moment().add(1, "weeks").endOf("day");
+    const oneWeekFromNowStart = moment().add(6, "days").endOf("day");
+    const venuesExpiring = newDataDeals.filter((d) => {
       if (d.expiryDate) {
         const expires = moment(d.expiryDate, "D MMM YYYY", true);
         return (

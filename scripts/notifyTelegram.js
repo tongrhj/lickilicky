@@ -5,15 +5,15 @@ const queryString = require("query-string");
 
 // Array.new().flat polyfill
 Object.defineProperty(Array.prototype, "flat", {
-  value: function(depth = 1) {
-    return this.reduce(function(flat, toFlatten) {
+  value: function (depth = 1) {
+    return this.reduce(function (flat, toFlatten) {
       return flat.concat(
         Array.isArray(toFlatten) && depth > 1
           ? toFlatten.flat(depth - 1)
           : toFlatten
       );
     }, []);
-  }
+  },
 });
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
@@ -29,7 +29,7 @@ const sendText = async (text, options = {}) => {
       const params = queryString.stringify({
         ...options,
         parse_mode: "html",
-        text
+        text,
       });
       const response = await got(
         `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?${params}`
@@ -46,7 +46,7 @@ const sendPhoto = async (photo, options = {}) => {
   try {
     const params = {
       photo,
-      ...options
+      ...options,
     };
     const response = await got(
       `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto?${queryString.stringify(
@@ -60,7 +60,7 @@ const sendPhoto = async (photo, options = {}) => {
   }
 };
 
-Array.prototype.contains = function(obj) {
+Array.prototype.contains = function (obj) {
   return this.indexOf(obj) > -1;
 };
 
@@ -70,14 +70,14 @@ const redundant = [
   "Supper",
   "Late Night",
   "Dinner with Drinks",
-  "Hidden Gem"
+  "Hidden Gem",
 ];
 const mustInclude = ["Halal", "Newly Opened"];
 
 // categories: Array<String>
-const selectCategories = categories => {
-  const contenders = categories.filter(ctg => !redundant.contains(ctg));
-  const mustIncludeCategories = categories.filter(ctg =>
+const selectCategories = (categories) => {
+  const contenders = categories.filter((ctg) => !redundant.contains(ctg));
+  const mustIncludeCategories = categories.filter((ctg) =>
     mustInclude.contains(ctg)
   );
   const allCategories = [contenders[0], ...mustIncludeCategories].filter(
@@ -96,7 +96,7 @@ const formatAndSendResponse = async (venue, status, options = {}) => {
 
   const mapParams = {
     api: 1, // required by Google
-    query: venue.name
+    query: venue.name,
   };
 
   let flavorText = "";
@@ -109,23 +109,23 @@ const formatAndSendResponse = async (venue, status, options = {}) => {
       deals =
         (venue.deals &&
           venue.deals
-            .map(deal => `${deal.title} (${deal.max_savings})`)
+            .map((deal) => `${deal.title} (${deal.max_savings})`)
             .join(", ")) ||
         "";
       dishes =
         (venue.dishes &&
           venue.dishes
-            .map(dish => `${dish.name} (${dish.formatted_price})`)
+            .map((dish) => `${dish.name} (${dish.formatted_price})`)
             .join(", ")) ||
         "";
       caption = `${flavorText}
 1-for-1: ${deals}
 
 ${
-        venue.categories && venue.categories.length
-          ? `✅ ${selectCategories(venue.categories)}`
-          : ""
-      }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
+  venue.categories && venue.categories.length
+    ? `✅ ${selectCategories(venue.categories)}`
+    : ""
+}${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
 📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(
         mapParams
       )}">${venue.location.address}</a>
@@ -139,23 +139,23 @@ ${
       deals =
         (venue.deals &&
           venue.deals
-            .map(deal => `${deal.title} (${deal.max_savings})`)
+            .map((deal) => `${deal.title} (${deal.max_savings})`)
             .join(", ")) ||
         "";
       dishes =
         (venue.dishes &&
           venue.dishes
-            .map(dish => `${dish.name} (${dish.formatted_price})`)
+            .map((dish) => `${dish.name} (${dish.formatted_price})`)
             .join(", ")) ||
         "";
       caption = `${flavorText}
 1-for-1: ${deals}
 
 ${
-        venue.categories && venue.categories.length
-          ? `✅ ${selectCategories(venue.categories)}`
-          : ""
-      }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
+  venue.categories && venue.categories.length
+    ? `✅ ${selectCategories(venue.categories)}`
+    : ""
+}${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
 📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(
         mapParams
       )}">${venue.location.address}</a>
@@ -168,15 +168,17 @@ ${
       flavorText = `Fresh new deals at 💚 <strong>${venue.name}</strong> 💚`;
       const newlyAddedDeals =
         venue.deals
-          .filter(current =>
-            venue.previous_deals.every(prev => prev.id !== current.id)
+          .filter((current) =>
+            venue.previous_deals.every((prev) => prev.id !== current.id)
           )
-          .map(deal => `${deal.title} (${deal.max_savings})`)
+          .map((deal) => `${deal.title} (${deal.max_savings})`)
           .join(", ") || "";
       const removedDeals =
         venue.previous_deals
-          .filter(prev => venue.deals.every(current => current.id !== prev.id))
-          .map(deal => `${deal.title} (${deal.max_savings})`)
+          .filter((prev) =>
+            venue.deals.every((current) => current.id !== prev.id)
+          )
+          .map((deal) => `${deal.title} (${deal.max_savings})`)
           .join(", ") || "";
 
       caption = `${flavorText}
@@ -184,10 +186,10 @@ ${
 ➖out: ${removedDeals}
 
 ${
-        venue.categories && venue.categories.length
-          ? `✅ ${selectCategories(venue.categories)}`
-          : ""
-      }
+  venue.categories && venue.categories.length
+    ? `✅ ${selectCategories(venue.categories)}`
+    : ""
+}
 📍 <a href="https://www.google.com/maps/search/?${queryString.stringify(
         mapParams
       )}">${venue.location.address}</a>
@@ -206,20 +208,20 @@ ${
       disable_notification: true,
       parse_mode: "HTML",
       caption,
-      chat_id
+      chat_id,
     });
   } else {
     return await sendText(caption, {
       disable_notification: true,
       disable_web_page_preview: true,
       parse_mode: "HTML",
-      chat_id
+      chat_id,
     });
   }
 };
 
-const sanitizedVenues = venues => {
-  return venues.filter(ven => {
+const sanitizedVenues = (venues) => {
+  return venues.filter((ven) => {
     const lagInDays = daysBetween(ven.time_first_added, Date.now());
     return lagInDays > 3;
   });
@@ -235,14 +237,14 @@ exports.default = async (
 ) => {
   try {
     const messagesToSend = options.chat_ids
-      .map(chat_id => {
+      .map((chat_id) => {
         const sendNewlyAddedVenues = addedList.map(
-          async venue =>
+          async (venue) =>
             await formatAndSendResponse(venue, "NEWLY_ADDED", { chat_id })
         );
 
         const sendReturningVenues = returningList.map(
-          async venue =>
+          async (venue) =>
             await formatAndSendResponse(venue, "RETURNING", { chat_id })
         );
 
@@ -251,7 +253,7 @@ exports.default = async (
         if (sanitizedRemovedVenues.length > 3) {
           const groupedLinks = sanitizedRemovedVenues
             .map(
-              venue =>
+              (venue) =>
                 `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
             )
             .join(`, `);
@@ -261,20 +263,18 @@ exports.default = async (
               disable_notification: true,
               disable_web_page_preview: true,
               parse_mode: "HTML",
-              chat_id
+              chat_id,
             })
           );
         } else {
-          sendRemovedVenues = sanitizedRemovedVenues.map(venue =>
+          sendRemovedVenues = sanitizedRemovedVenues.map((venue) =>
             sendText(
-              `Farewell 👋 <a href="https://burpple.com/${venue.url}">${
-                venue.name
-              }</a> has been removed from @burpplebeyond after ${lagInDays} days`,
+              `Farewell 👋 <a href="https://burpple.com/${venue.url}">${venue.name}</a> has been removed from @burpplebeyond after ${lagInDays} days`,
               {
                 disable_notification: true,
                 disable_web_page_preview: true,
                 parse_mode: "HTML",
-                chat_id
+                chat_id,
               }
             )
           );
@@ -284,7 +284,7 @@ exports.default = async (
         if (expiringList.length > 3) {
           const groupedLinks = sanitizedRemovedVenues
             .map(
-              venue =>
+              (venue) =>
                 `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
             )
             .join(`, `);
@@ -294,29 +294,25 @@ exports.default = async (
               disable_notification: true,
               disable_web_page_preview: true,
               parse_mode: "HTML",
-              chat_id
+              chat_id,
             })
           );
         } else {
-          sendExpiringVenues = expiringList.map(venue =>
+          sendExpiringVenues = expiringList.map((venue) =>
             sendText(
-              `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${
-                venue.name
-              }</a> while you still can! The current deals are valid till ${
-                venue.expiryDate
-              } on @burpplebeyond`,
+              `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${venue.name}</a> while you still can! The current deals are valid till ${venue.expiryDate} on @burpplebeyond`,
               {
                 disable_notification: true,
                 disable_web_page_preview: true,
                 parse_mode: "HTML",
-                chat_id
+                chat_id,
               }
             )
           );
         }
 
         const sendChangedDeals = dealsChangedList.map(
-          async venue =>
+          async (venue) =>
             await formatAndSendResponse(venue, "CHANGED_DEALS", { chat_id })
         );
 
