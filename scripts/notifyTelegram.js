@@ -267,8 +267,9 @@ exports.default = async (
             })
           );
         } else {
-          sendRemovedVenues = sanitizedRemovedVenues.map((venue) =>
-            sendText(
+          sendRemovedVenues = sanitizedRemovedVenues.map((venue) => {
+            const lagInDays = daysBetween(venue.time_first_added, Date.now());
+            return sendText(
               `Farewell 👋 <a href="https://burpple.com/${venue.url}">${venue.name}</a> has been removed from @burpplebeyond after ${lagInDays} days`,
               {
                 disable_notification: true,
@@ -276,8 +277,8 @@ exports.default = async (
                 parse_mode: "HTML",
                 chat_id,
               }
-            )
-          );
+            );
+          });
         }
 
         let sendExpiringVenures = [];
