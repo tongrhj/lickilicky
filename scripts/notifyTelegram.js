@@ -281,7 +281,7 @@ exports.default = async (
           });
         }
 
-        let sendExpiringVenures = [];
+        let sendExpiringVenues = [];
         if (expiringList.length > 3) {
           const groupedLinks = sanitizedRemovedVenues
             .map(
