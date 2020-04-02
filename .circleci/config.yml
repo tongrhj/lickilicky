@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/node:8.11-browsers
+      - image: circleci/node:12.16.1
 
     working_directory: ~/lickilicky
 
@@ -32,7 +32,7 @@ jobs:
 
       - run:
           name: Deploy to now
-          command: "./node_modules/.bin/now dist --name lickilicky --token ${NOW_TOKEN} --public && ./node_modules/.bin/now --token ${NOW_TOKEN} alias lickilicky"
+          command: "npm run now dist --name lickilicky --token ${NOW_TOKEN} --public && npm run now --token ${NOW_TOKEN} alias lickilicky"
 workflows:
   version: 2
   build-and-deploy:
