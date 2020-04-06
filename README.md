@@ -6,17 +6,28 @@ Easy to reference list of merchants offering 1-for-1 F&B deals in Singapore
 
 Will allow for tracking over time in case merchants are added/removed without informing subscribers (rude!)
 
-Magic happens during `npm run build`:
+## Running the script
 
-- Copies relevant frontend files to `dist` folder
-- Retrieves the latest merchant data and compares it with the existing data to build the diff
-- Generates its output as `dist/venues.min.json` for frontend (`index.html`) to consume
-- Sends a notification to Telegram with the diff formatted for chat
+```
+npm run build
+```
 
-CircleCI is scheduled to run every weekday, 9am SGT
+- `npm run data`: Retrieves the latest merchant data and compares it with the existing data to build the diff
+  - `tsc`: compiles to `/output` as JavaScript
+  - Generates its output as `dist/venues.min.json` for frontend (`index.html`) to consume
+  - Sends notifications to Telegram with the diff formatted for chat
+- `npm run frontend`: Copies relevant frontend files to `dist` folder
 
-## Credits
+## Feel good food feed
+
+- Subscribe for updates at [Telegram Channel Burpple Beyond Updates](https://t.me/burpplebeyond)
+  - Updates published every weekday, 9am SGT
+  - I know you're busy and need to focus. Notifications are disabled by default.
+
+## Maintainers
+
+- [Jared Tong](https://jaredtong.com/burpple-beyond/)
+
+## Disclaimer
 
 lickilicky is not affiliated with any of the establishments listed or the source of the data in any way.
-
-Forked from [Repokémon](https://github.com/cheeaun/repokemon)
