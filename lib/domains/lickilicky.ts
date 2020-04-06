@@ -1,8 +1,10 @@
 import got from "got";
 import fs from "fs";
 import moment from "moment";
-import Burpple, { BeyondDeal } from "./burpple";
-import { getNestedObject, contains } from "../helpers";
+import Burpple from "./burpple";
+import get from "lodash/get";
+import chunk from "lodash/chunk";
+import { sleep } from "../helpers";
 
 export type Location = {
   address: string;
@@ -11,19 +13,30 @@ export type Location = {
   neighbourhood: string;
 };
 
+type MinimalDeal = {
+  id: number;
+  title: string;
+  max_savings: string;
+};
+
+type MinimalDish = {
+  name: string;
+  formatted_price: string;
+};
+
 export type LickilickyVenue = {
   id: number;
   name: string;
   location: Location;
   banner_url: string;
-  dishes: Array<any>;
+  dishes: Array<MinimalDish>;
   url: string;
   categories: Array<string>;
   formatted_price: string;
   time_first_added: number;
-  deals: Array<BeyondDeal>;
-  expiryDate: string;
-  previous_deals?: Array<BeyondDeal>;
+  deals: Array<MinimalDeal>;
+  expiryDate: string | null;
+  previous_deals?: Array<MinimalDeal>;
   newly_added: boolean;
   returning: boolean;
   removed: boolean;
@@ -52,12 +65,13 @@ class Lickilicky {
     if (!process.env.PARSED_VENUE_URL) {
       throw new Error(`Missing required process.env.PARSED_VENUE_URL`);
     }
-    const existingLickilickyVenueResponse = await got(
-      process.env.PARSED_VENUE_URL,
-      {
-        json: true,
-      }
-    );
+    const existingLickilickyVenueResponse: Array<
+      LickilickyVenue
+    > | null = await got(process.env.PARSED_VENUE_URL).json();
+    if (!existingLickilickyVenueResponse)
+      throw new Error("Missing existingLickilickyVenueResponse");
+    console.log("Get full list of venues from Lickilicky......");
+    return existingLickilickyVenueResponse;
   }
 
   private async _hydrateVenue(
@@ -67,19 +81,19 @@ class Lickilicky {
     if (alreadyHydrated) return partialVenue;
 
     const burppleVenue = await this.Burpple.getVenue(partialVenue.id);
-    const banner_url = burppleVenue.images[0].medium_url;
+    const banner_url = get(burppleVenue, ["images", 0, "medium_url"], "");
     const categories: Array<string> = burppleVenue.categories
-      .map((c: any): string => c.name)
-      .filter((c2: string) => !c2.includes("Burpple"))
-      .filter((c3: string) => !contains(c3, this.REDUNDANT_CATEGORIES));
-    const mustIncludeCategories = categories.filter((ctg: string) =>
-      contains(ctg, this.ESSENTIAL_CATEGORIES)
+      .map((ctg) => ctg.name)
+      .filter((name) => !name.includes("Burpple"))
+      .filter((name) => !this.REDUNDANT_CATEGORIES.includes(name));
+    const mustIncludeCategories = categories.filter((name) =>
+      this.ESSENTIAL_CATEGORIES.includes(name)
     );
     const selectedCategories = [categories[0], ...mustIncludeCategories].filter(
       Boolean
     );
     const deals = burppleVenue.beyond
-      ? burppleVenue.beyond.redemptions.map((r: any) => {
+      ? burppleVenue.beyond.redemptions.map((r) => {
           const deal = r.beyond_deal;
           return {
             id: deal.id,
@@ -88,16 +102,15 @@ class Lickilicky {
           };
         })
       : [];
-    const dishes = burppleVenue.dishes.map((dish: any) => ({
+    const dishes = burppleVenue.dishes.map((dish) => ({
       name: dish.name,
       formatted_price: dish.formatted_price,
     }));
-    const expiryString = getNestedObject(burppleVenue, [
-      "beyond",
-      "venue_additional_info",
-      0,
-      "title",
-    ]);
+    const expiryString = get(
+      burppleVenue,
+      ["beyond", "venue_additional_info", 0, "title"],
+      null
+    );
     const expiryDate = expiryString
       ? moment(
           expiryString.replace("All deals valid till ", ""),
@@ -106,27 +119,41 @@ class Lickilicky {
         ).format("D MMM YYYY")
       : null;
 
-    return Object.assign(partialVenue, {
+    return {
+      ...partialVenue,
       url: burppleVenue.url,
       banner_url,
       categories: selectedCategories,
       dishes,
       deals,
       expiryDate,
-    });
+    };
   }
 
   async hydrateAllVenues(
     partialVenues: Array<LickilickyVenue>
   ): Promise<Array<LickilickyVenue>> {
+    console.log("Hydrating all venues......");
     const newVenues: Array<LickilickyVenue> = [];
-    const promises = partialVenues.map((v) => async () =>
-      this._hydrateVenue(v)
-    );
-    for (const hydrateVenue of promises) {
-      const result = await hydrateVenue();
-      newVenues.push(result);
+    const promises = partialVenues.map((v) => this._hydrateVenue(v));
+    let chunkedPromises = chunk(promises, 1);
+    let percentage = 0;
+    for (let [index, chunk] of chunkedPromises.entries()) {
+      // start random progress
+      const newPercentage = Math.floor((index / chunkedPromises.length) * 100);
+      if (
+        newPercentage - percentage > Math.random() * 10 &&
+        newPercentage !== 100
+      ) {
+        console.log(`...${newPercentage}%`);
+        percentage = newPercentage;
+      }
+      // end random progress
+      const results = await Promise.all(chunk);
+      results.forEach((result) => newVenues.push(result));
+      await sleep(1000 * Math.pow(2, Math.random()) + Math.random() * 100);
     }
+    console.log("...100%");
     return newVenues;
   }
 
@@ -155,7 +182,7 @@ class Lickilicky {
       JSON.stringify(allVenues),
       (err) => {
         if (err) throw err;
-        console.log("Venues saved!");
+        console.log("Venues saved to dist/data/venues.min.json");
       }
     );
   }

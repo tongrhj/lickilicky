@@ -2,7 +2,7 @@ import queryString from "query-string";
 import moment from "moment";
 import { BeyondDeal } from "./burpple";
 import { LickilickyVenue } from "./lickilicky";
-import { daysBetween, contains } from "../helpers";
+import { daysBetween } from "../helpers";
 
 type VenueFilter = "RETURNING" | "NEWLY_ADDED" | "CHANGED_DEALS";
 
@@ -245,17 +245,15 @@ ${
       .filter((venue: LickilickyVenue) => {
         if (venue.newly_added || venue.returning) return false;
 
-        const newDealIds = venue.deals.map((deal: any) => deal.id);
+        const newDealIds = venue.deals.map((deal) => deal.id);
         const existingVenue = this.updatedVenues.find(
-          (existing: LickilickyVenue) => existing.id === venue.id
+          (existing) => existing.id === venue.id
         );
         if (!existingVenue) return false;
-        const existingVenueDealIds = existingVenue.deals.map(
-          (deal: BeyondDeal) => deal.id
-        );
+        const existingVenueDealIds = existingVenue.deals.map((deal) => deal.id);
 
-        return !newDealIds.every((dealId: number) =>
-          contains(dealId, existingVenueDealIds)
+        return !newDealIds.every((dealId) =>
+          existingVenueDealIds.includes(dealId)
         );
       })
       .map((venue) => {
@@ -263,16 +261,17 @@ ${
           (existing) => existing.id === venue.id
         );
 
-        return Object.assign(venue, {
+        return {
+          ...venue,
           previous_deals:
             existingVenue && existingVenue.deals
               ? [
-                  ...new Set(existingVenue.deals.map((item) => item.title)),
+                  ...existingVenue.deals.map((item) => item.title),
                 ].map((title) =>
                   existingVenue.deals.find((deal) => deal.title === title)
                 )
               : [],
-        });
+        };
       });
 
     return venuesWithDealsChanged.map(this._makeDealsChanged);

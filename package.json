@@ -16,13 +16,13 @@
     "build": "tsc && npm run data && npm run frontend",
     "data": "node ./output/scripts/run.js",
     "frontend": "mkdir -p dist/data && cp -R assets dist/ && cp index.html dist/ && cp now.json dist/ && node ./output/scripts/updateLastUpdatedDate.js",
-    "lint": "tsc --noEmit",
-    "test": "prettier \"{lib,scripts}/*.ts\" --list-different && npm run lint",
+    "lint": "prettier --check \"{lib,scripts}/*.ts\" && tsc --noEmit",
     "format": "prettier \"{lib,scripts}/*.ts\" --write",
     "clean": "rm -rf ./dist ./output"
   },
   "devDependencies": {
-    "@types/got": "^9.6.9",
+    "@types/lodash": "^4.14.149",
+    "@types/tough-cookie": "^4.0.0",
     "got": "^10.7.0",
     "husky": "^4.2.3",
     "moment": "^2.24.0",
@@ -38,5 +38,8 @@
     "hooks": {
       "pre-commit": "pretty-quick --staged"
     }
+  },
+  "dependencies": {
+    "lodash": "^4.17.15"
   }
 }

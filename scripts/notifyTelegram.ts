@@ -1,6 +1,3 @@
-import got from "got";
-
-import { contains } from "../lib/helpers";
 import { LickilickyVenue } from "../lib/domains/lickilicky";
 import Notifications from "../lib/domains/notifications";
 import Telegram from "../lib/telegram";
@@ -30,13 +27,14 @@ const notifyTelegram = async ({
     ...notify.expiring(),
   ];
   if (notificationsToSend.length > 0) {
+    console.log("Sending notifications to Telegram.......");
     if (!TELEGRAM_TOKEN) {
       throw new Error(`Missing Telegram Token`);
     }
     const NotificationService = new Telegram(TELEGRAM_TOKEN);
     let combinedPromises: Array<Function> = [];
     for (const chatId of chatIds) {
-      combinedPromises.concat(
+      combinedPromises = combinedPromises.concat(
         notificationsToSend.map((n) => async () => {
           await NotificationService.sendNotification(n, chatId);
         })
@@ -45,6 +43,9 @@ const notifyTelegram = async ({
     for (const promise of combinedPromises) {
       await promise();
     }
+    console.log("[ Sent ]");
+  } else {
+    console.log("[ No notifications ]");
   }
 };
 

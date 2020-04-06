@@ -2,12 +2,10 @@ import { CookieJar } from "tough-cookie";
 import got from "got";
 
 type GenericBurppleResponse<D> = {
-  body: {
-    meta: {
-      code: number;
-    };
-    data: D;
+  meta: {
+    code: number;
   };
+  data: D;
 };
 
 type BurppleLocation = {
@@ -108,6 +106,19 @@ type BeyondDealWithMeta = {
   beyond_deal: BeyondDeal;
 };
 
+type Dish = {
+  id: number;
+  name: string;
+  price: string;
+  formatted_price: string;
+  image: {
+    url: string;
+    large_url: string;
+    medium_url: string;
+    small_url: string;
+  };
+};
+
 type FullBurppleVenue = MinimalBurppleVenue & {
   wish_id: null | number;
   url: string;
@@ -145,7 +156,7 @@ type FullBurppleVenue = MinimalBurppleVenue & {
   }>;
   foods: Array<BurppleFoodWithReview>;
   promotions: Array<any>;
-  dishes: Array<any>;
+  dishes: Array<Dish>;
   reservation_links: Array<any>;
   delivery_links: Array<any>;
   tags: Array<any>;
@@ -169,40 +180,65 @@ type BurppleVenueResponse = GenericBurppleResponse<FullBurppleVenue>;
 
 class BurppleBeyond {
   private readonly token: string;
-  private readonly CookieJar: CookieJar;
 
   constructor(token: string) {
     this.token = token;
-    this.CookieJar = new CookieJar();
+  }
+
+  // Monkey patching till got compatibility with tough-cookie v4 resolved:
+  // https://github.com/sindresorhus/got/issues/1131
+  cookieJar(): CookieJar {
+    function proxy(org: any, proxifier: any) {
+      return new Proxy(proxifier(org), {
+        get: (obj, prop) => (prop in obj ? obj[prop] : org[prop]),
+      });
+    }
+
+    const monkeyPatchedCookieJar = proxy(new CookieJar(), (obj: any) => {
+      const noop = () => {};
+      return {
+        setCookie: async (rawCookie: any, url: any) =>
+          obj.setCookie(rawCookie, url, noop),
+        getCookieString: async (url: any) => obj.getCookieString(url),
+      };
+    });
+
+    return monkeyPatchedCookieJar;
   }
 
   async getVenues(): Promise<Array<BurppleVenue>> {
-    const response: BurppleVenuesResponse | null = await got(
+    const responseBody: BurppleVenuesResponse = await got(
       `https://app.burpple.com/p1/beyond/venues?auth_token=${this.token}`,
       {
-        json: true,
         headers: {
           "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond",
         },
       }
-    );
-    if (!response) throw new Error("Get request failed");
-    return response.body.data;
+    ).json();
+    console.log("Get list of venues from Burpple.......");
+    if (!responseBody) throw new Error("Get request failed");
+    return responseBody.data;
   }
 
   async getVenue(id: number): Promise<FullBurppleVenue> {
-    const response: BurppleVenueResponse | null = await got(
+    const responseBody: BurppleVenueResponse = await got(
       `https://app.burpple.com/p1/venues/${id}?auth_token=${this.token}`,
       {
-        json: true,
         headers: {
           "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond",
         },
-        cookieJar: this.CookieJar,
+        // @ts-ignore
+        cookieJar: this.cookieJar(),
+        retry: {
+          limit: 3,
+          calculateDelay: ({ attemptCount }) => {
+            return 1000 * Math.pow(2, attemptCount) + Math.random() * 1000;
+          },
+        },
       }
-    );
-    if (!response) throw new Error("Get request failed");
-    return response.body.data;
+    ).json();
+    if (!responseBody) throw new Error("Get request failed");
+    return responseBody.data;
   }
 }
 

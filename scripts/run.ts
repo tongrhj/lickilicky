@@ -13,6 +13,7 @@ try {
       ...result,
       chatIds,
     });
+    console.log("[ FINISH ]");
   })();
 } catch (e) {
   console.error(e);

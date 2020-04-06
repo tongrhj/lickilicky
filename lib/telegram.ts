@@ -17,18 +17,16 @@ type SendPhotoOptions = {
   disable_notification?: boolean;
 };
 
-type TelegramResponse = {
-  body:
-    | {
-        ok: true;
-        result: any;
-        description?: string;
-      }
-    | {
-        ok: false;
-        description: string;
-      };
-};
+type TelegramResponse =
+  | {
+      ok: true;
+      result: any;
+      description?: string;
+    }
+  | {
+      ok: false;
+      description: string;
+    };
 
 class Telegram {
   private readonly baseUrl: string;
@@ -49,12 +47,9 @@ class Telegram {
           text,
         });
         const response: TelegramResponse = await got(
-          `${this.baseUrl}/sendMessage?${params}`,
-          {
-            json: true,
-          }
-        );
-        console.log(response.body);
+          `${this.baseUrl}/sendMessage?${params}`
+        ).json();
+        console.log(JSON.stringify(response));
         return response;
       }
     } catch (error) {
@@ -72,12 +67,9 @@ class Telegram {
         ...options,
       });
       const response: TelegramResponse = await got(
-        `${this.baseUrl}/sendPhoto?${params}`,
-        {
-          json: true,
-        }
-      );
-      console.log(response.body);
+        `${this.baseUrl}/sendPhoto?${params}`
+      ).json();
+      console.log(JSON.stringify(response));
       return response;
     } catch (error) {
       console.log(error);

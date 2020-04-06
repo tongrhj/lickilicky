@@ -1,16 +1,7 @@
-import notifyTelegram from "./notifyTelegram";
-import moment from "moment";
-import { CookieJar } from "tough-cookie";
-import BurppleBeyondService, { BurppleVenue } from "../lib/domains/burpple";
-import LickilickyService, {
-  LickilickyVenue,
-  Location,
-} from "../lib/domains/lickilicky";
+import BurppleBeyondService from "../lib/domains/burpple";
+import LickilickyService, { LickilickyVenue } from "../lib/domains/lickilicky";
 import MapperService from "../lib/mapper";
-import { contains } from "../lib/helpers";
 
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const TELEGRAM_CHAT_ID_2 = process.env.TELEGRAM_CHAT_ID_2;
 const BURPPLE_TOKEN = process.env.BURPPLE_AUTH_TOKEN;
 
 type CompareVenueResponse = {
@@ -31,7 +22,7 @@ const updateVenues = async (): Promise<CompareVenueResponse> => {
 
   if (!lickilickyVenues) throw new Error(`Missing lickilickyVenues`);
 
-  const updatedLickilickyVenues = beyondVenues.map((venue: BurppleVenue) =>
+  const updatedLickilickyVenues = beyondVenues.map((venue) =>
     Mapper.mapToLickilickyVenue(venue, lickilickyVenues)
   );
   const hydratedUpdatedVenues = await Lickilicky.hydrateAllVenues(
