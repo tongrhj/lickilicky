@@ -81,7 +81,7 @@ ${
   }
 
   _makeReturning(venue: LickilickyVenue): Notification {
-    const flavorText = `Welcome back 🎉 <strong>${venue.name}</strong> 🎉`;
+    const flavorText = `Open for takeaway: 🎉 <strong>${venue.name}</strong> 🎉`;
     const deals =
       (venue.deals &&
         venue.deals
