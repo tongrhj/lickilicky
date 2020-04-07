@@ -142,7 +142,7 @@ class Lickilicky {
       // start random progress
       const newPercentage = Math.floor((index / chunkedPromises.length) * 100);
       if (
-        newPercentage - percentage > Math.random() * 10 &&
+        newPercentage - percentage > Math.random() * 50 &&
         newPercentage !== 100
       ) {
         console.log(`...${newPercentage}%`);

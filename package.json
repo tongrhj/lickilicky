@@ -13,9 +13,9 @@
     "url": "https://github.com/tongrhj/lickilicky.git"
   },
   "scripts": {
-    "build": "tsc && npm run data && npm run frontend",
+    "build": "tsc && mkdir -p dist/data && npm run data && npm run frontend",
     "data": "node ./output/scripts/run.js",
-    "frontend": "mkdir -p dist/data && cp -R assets dist/ && cp index.html dist/ && cp now.json dist/ && node ./output/scripts/updateLastUpdatedDate.js",
+    "frontend": "cp -R assets dist/ && cp index.html dist/ && cp now.json dist/",
     "lint": "prettier --check \"{lib,scripts}/*.ts\" && tsc --noEmit",
     "format": "prettier \"{lib,scripts}/*.ts\" --write",
     "clean": "rm -rf ./dist ./output"

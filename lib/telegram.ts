@@ -46,9 +46,9 @@ class Telegram {
           parse_mode: "html",
           text,
         });
-        const response: TelegramResponse = await got(
-          `${this.baseUrl}/sendMessage?${params}`
-        ).json();
+        const url = `${this.baseUrl}/sendMessage?${params}`;
+        console.log(url);
+        const response: TelegramResponse = await got(url).json();
         console.log(JSON.stringify(response));
         return response;
       }
@@ -66,9 +66,9 @@ class Telegram {
         photo,
         ...options,
       });
-      const response: TelegramResponse = await got(
-        `${this.baseUrl}/sendPhoto?${params}`
-      ).json();
+      const url = `${this.baseUrl}/sendPhoto?${params}`;
+      console.log(url);
+      const response: TelegramResponse = await got(url).json();
       console.log(JSON.stringify(response));
       return response;
     } catch (error) {
