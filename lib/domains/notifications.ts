@@ -6,6 +6,12 @@ import { daysBetween } from "../helpers";
 
 type VenueFilter = "RETURNING" | "NEWLY_ADDED" | "CHANGED_DEALS";
 
+const mapVenueToGoogleMapsParams = (venue: LickilickyVenue): string =>
+  queryString.stringify({
+    api: 1,
+    query: venue.name,
+  });
+
 export type Notification = {
   caption: string;
   photo?: string;
@@ -28,13 +34,6 @@ class Notifications {
   }) {
     this.updatedVenues = updatedVenues;
     this.removedVenues = removedVenues;
-  }
-
-  _mapParams(venue: LickilickyVenue): string {
-    return queryString.stringify({
-      api: 1,
-      query: venue.name,
-    });
   }
 
   // Not allowed to nest HTML tags within caption
@@ -61,9 +60,9 @@ ${
     ? `✅ ${venue.categories.join(", ")}`
     : ""
 }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
-📍 <a href="https://www.google.com/maps/search/?${this._mapParams(venue)}">${
-      venue.location.address
-    }</a>
+📍 <a href="https://www.google.com/maps/search/?${mapVenueToGoogleMapsParams(
+      venue
+    )}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
 @burpplebeyond
@@ -95,19 +94,19 @@ ${
           .join(", ")) ||
       "";
     const caption = `${flavorText}
-  1-for-1: ${deals}
+1-for-1: ${deals}
 
-  ${
-    venue.categories && venue.categories.length
-      ? `✅ ${venue.categories.join(", ")}`
-      : ""
-  }${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
-  📍 <a href="https://www.google.com/maps/search/?${this._mapParams(venue)}">${
-      venue.location.address
-    }</a>
-  🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
+${
+  venue.categories && venue.categories.length
+    ? `✅ ${venue.categories.join(", ")}`
+    : ""
+}${dishes && dishes.length ? `\n👍 ${dishes}` : ""}
+📍 <a href="https://www.google.com/maps/search/?${mapVenueToGoogleMapsParams(
+      venue
+    )}">${venue.location.address}</a>
+🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
-  @burpplebeyond
+@burpplebeyond
   `;
     if (venue.banner_url && venue.banner_url.length) {
       return {
@@ -149,9 +148,9 @@ ${
     ? `✅ ${venue.categories.join(", ")}`
     : ""
 }
-📍 <a href="https://www.google.com/maps/search/?${this._mapParams(venue)}">${
-      venue.location.address
-    }</a>
+📍 <a href="https://www.google.com/maps/search/?${mapVenueToGoogleMapsParams(
+      venue
+    )}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
 @burpplebeyond
@@ -171,7 +170,7 @@ ${
   _makeIndividualRemoved(venue: LickilickyVenue): Notification {
     const lagInDays = daysBetween(venue.time_first_added, Date.now());
     return {
-      caption: `Farewell 👋 <a href="https://burpple.com/${venue.url}">${venue.name}</a> has been removed from @burpplebeyond after ${lagInDays} days`,
+      caption: `Goodbye 👋 <a href="https://burpple.com/${venue.url}">${venue.name}</a> Hope to see you soon back on @burpplebeyond`,
     };
   }
 
@@ -182,7 +181,7 @@ ${
           `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
       )
       .join(`, `);
-    const caption = `Farewell 👋 ${groupedLinks} have been removed from @burpplebeyond!`;
+    const caption = `Goodbye 👋 ${groupedLinks} Hope to see you soon back on @burpplebeyond!`;
     return {
       caption,
     };
@@ -233,10 +232,10 @@ ${
         );
       }
     );
-    if (venuesRemovedSinceLastRun.length > 3) {
-      return [this._makeCombinedRemoved(venuesRemovedSinceLastRun)];
+    if (venuesRemovedSinceLastRun.length > 12) {
+      throw new Error("Too many venues removed! Handle manually");
     } else {
-      return venuesRemovedSinceLastRun.map(this._makeIndividualRemoved);
+      return [this._makeCombinedRemoved(venuesRemovedSinceLastRun)];
     }
   }
 
