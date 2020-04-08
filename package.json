@@ -14,9 +14,10 @@
   },
   "scripts": {
     "build": "tsc && mkdir -p dist/data && npm run data && npm run frontend",
-    "data": "node ./output/scripts/run.js",
-    "frontend": "cp -R assets dist/ && cp index.html dist/ && cp now.json dist/",
-    "lint": "prettier --check \"{lib,scripts}/*.ts\" && tsc --noEmit",
+    "data": "node ./output/scripts/run.js --unhandled-rejections=strict",
+    "frontend": "cp -R assets dist/ && cp index.html dist/",
+    "lint": "prettier --check \"{lib,scripts}/*.ts\"",
+    "typecheck": "tsc --noEmit",
     "format": "prettier \"{lib,scripts}/*.ts\" --write",
     "clean": "rm -rf ./dist ./output"
   },
@@ -26,7 +27,6 @@
     "got": "^10.7.0",
     "husky": "^4.2.3",
     "moment": "^2.24.0",
-    "now": "^17.1.1",
     "prettier": "^2.0.0",
     "pretty-quick": "^2.0.1",
     "query-string": "^6.11.1",
