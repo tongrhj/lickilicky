@@ -174,7 +174,8 @@ ${
     };
   }
 
-  _makeCombinedRemoved(venues: Array<LickilickyVenue>): Notification {
+  _makeCombinedRemoved(venues: Array<LickilickyVenue>): Notification | null {
+    if (!venues || !venues.length) return null;
     const groupedLinks = venues
       .map(
         (venue) =>
@@ -209,6 +210,9 @@ ${
     const venuesAddedSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.newly_added
     );
+    if (venuesAddedSinceLastRun.length > 12) {
+      throw new Error("Too many new venues! Handle manually");
+    }
     return venuesAddedSinceLastRun.map(this._makeNewlyAdded);
   }
 
@@ -216,6 +220,9 @@ ${
     const venuesReturningSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.returning
     );
+    if (venuesReturningSinceLastRun.length > 12) {
+      throw new Error("Too many venues returning! Handle manually");
+    }
     return venuesReturningSinceLastRun.map(this._makeReturning);
   }
 
@@ -235,7 +242,8 @@ ${
     if (venuesRemovedSinceLastRun.length > 12) {
       throw new Error("Too many venues removed! Handle manually");
     } else {
-      return [this._makeCombinedRemoved(venuesRemovedSinceLastRun)];
+      const result = this._makeCombinedRemoved(venuesRemovedSinceLastRun);
+      return result ? [result] : [];
     }
   }
 
