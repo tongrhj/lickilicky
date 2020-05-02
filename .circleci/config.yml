@@ -37,6 +37,13 @@ jobs:
           command: "npx now dist --token ${NOW_TOKEN} --prod --confirm --no-clipboard"
 workflows:
   version: 2
+  release:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
   daily:
     triggers:
       - schedule:
