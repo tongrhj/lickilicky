@@ -34,7 +34,7 @@ jobs:
 
       - run:
           name: Deploy to now
-          command: "npx now dist --token ${NOW_TOKEN} --prod --confirm --no-clipboard --debug"
+          command: "npx now dist --token ${NOW_TOKEN} --prod --confirm --no-clipboard"
 workflows:
   version: 2
   daily:
