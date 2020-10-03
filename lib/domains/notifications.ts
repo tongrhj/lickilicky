@@ -65,7 +65,7 @@ ${
     )}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
-@burpplebeyond
+@Burpple Beyond
 `;
     if (venue.banner_url && venue.banner_url.length) {
       return {
@@ -106,7 +106,7 @@ ${
     )}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
-@burpplebeyond
+@Burpple Beyond
   `;
     if (venue.banner_url && venue.banner_url.length) {
       return {
@@ -153,7 +153,7 @@ ${
     )}">${venue.location.address}</a>
 🌍 <a href="https://burpple.com/${venue.url}">View on Burpple</a>
 
-@burpplebeyond
+@Burpple Beyond
 `;
     if (venue.banner_url && venue.banner_url.length) {
       return {
@@ -170,7 +170,7 @@ ${
   _makeIndividualRemoved(venue: LickilickyVenue): Notification {
     const lagInDays = daysBetween(venue.time_first_added, Date.now());
     return {
-      caption: `Goodbye 👋 <a href="https://burpple.com/${venue.url}">${venue.name}</a> Hope to see you soon back on @burpplebeyond`,
+      caption: `Goodbye 👋 <a href="https://burpple.com/${venue.url}">${venue.name}</a> Hope to see you soon back on @Burpple Beyond`,
     };
   }
 
@@ -182,7 +182,7 @@ ${
           `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
       )
       .join(`, `);
-    const caption = `Goodbye 👋 ${groupedLinks} Hope to see you soon back on @burpplebeyond!`;
+    const caption = `Goodbye 👋 ${groupedLinks} Hope to see you soon back on @Burpple Beyond!`;
     return {
       caption,
     };
@@ -190,7 +190,7 @@ ${
 
   _makeIndividualExpiring(venue: LickilickyVenue): Notification {
     return {
-      caption: `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${venue.name}</a> while you still can! The current deals are valid till ${venue.expiryDate} on @burpplebeyond`,
+      caption: `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${venue.name}</a> while you still can! The current deals are valid till ${venue.expiryDate} on @Burpple Beyond`,
     };
   }
 
@@ -202,7 +202,7 @@ ${
       )
       .join(`, `);
     return {
-      caption: `🏃‍♀️ Hurry down to ${groupedLinks} while you still can! The current deals are expiring soon on @burpplebeyond`,
+      caption: `🏃‍♀️ Hurry down to ${groupedLinks} while you still can! The current deals are expiring soon on @Burpple Beyond`,
     };
   }
 
