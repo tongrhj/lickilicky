@@ -1,6 +1,6 @@
 import got from "got";
 import fs from "fs";
-import moment from "moment";
+import { format, parse } from "date-fns";
 import Burpple from "./burpple";
 import get from "lodash/get";
 import chunk from "lodash/chunk";
@@ -112,11 +112,14 @@ class Lickilicky {
       null
     );
     const expiryDate = expiryString
-      ? moment(
-          expiryString.replace("All deals valid till ", ""),
-          "D MMM YYYY",
-          true
-        ).format("D MMM YYYY")
+      ? format(
+          parse(
+            expiryString.replace("All deals valid till ", ""),
+            "d MMM yyyy",
+            new Date()
+          ),
+          "d MMM yyyy"
+        )
       : null;
 
     return {

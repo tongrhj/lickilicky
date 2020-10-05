@@ -1,5 +1,5 @@
 import queryString from "query-string";
-import moment from "moment";
+import { parse, addDays, endOfDay } from "date-fns";
 import { BeyondDeal } from "./burpple";
 import { LickilickyVenue } from "./lickilicky";
 import { daysBetween } from "../helpers";
@@ -285,11 +285,11 @@ ${
   }
 
   expiring(): Array<Notification> {
-    const oneWeekFromNowEnd = moment().add(1, "weeks").endOf("day");
-    const oneWeekFromNowStart = moment().add(6, "days").endOf("day");
+    const oneWeekFromNowEnd = endOfDay(addDays(new Date(), 7));
+    const oneWeekFromNowStart = endOfDay(addDays(new Date(), 6));
     const venuesExpiring = this.updatedVenues.filter((venue) => {
       if (venue.expiryDate) {
-        const expires = moment(venue.expiryDate, "D MMM YYYY", true);
+        const expires = parse(venue.expiryDate, "d MMM yyyy", new Date());
         return (
           expires &&
           expires >= oneWeekFromNowStart &&
