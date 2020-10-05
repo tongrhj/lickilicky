@@ -20,9 +20,8 @@ npm run build
 
 ## Feel good food feed
 
-- Subscribe for updates at [Telegram Channel Burpple Beyond Updates](https://t.me/burpplebeyond)
+- Subscribe for updates at [Telegram Channel Burpple](https://t.me/burpple)
   - Updates published every weekday, 9am SGT
-  - I know you're busy and need to focus. Notifications are disabled by default.
 
 ## Maintainers
 
