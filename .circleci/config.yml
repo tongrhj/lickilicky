@@ -4,7 +4,7 @@
 #
 version: 2.1
 jobs:
-  build:
+  execute:
     docker:
       # specify the version you desire here
       - image: circleci/node:14
@@ -21,20 +21,41 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: npm install
+      - run: npm ci
 
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      - run: npm run lint
-
       - run: npm run build
 
       - run:
           name: Deploy to now
           command: "npx now dist --token ${NOW_TOKEN} --prod --confirm --no-clipboard"
+  test:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:14
+
+    working_directory: ~/lickilicky
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: npm ci
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+      - run: npm run test
 workflows:
   version: 2
   daily:
@@ -46,4 +67,7 @@ workflows:
               only:
                 - master
     jobs:
-      - build
+      - execute
+  linting:
+    jobs:
+      - test
