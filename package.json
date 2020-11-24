@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc && mkdir -p dist/data && npm run data && npm run frontend",
-    "data": "node ./output/scripts/run.js --unhandled-rejections=strict",
+    "data": "node --unhandled-rejections=strict ./output/scripts/run.js",
     "frontend": "cp -R assets dist/ && cp index.html dist/",
     "lint": "prettier --check \"{lib,scripts}/*.ts\"",
     "typecheck": "tsc --noEmit",
