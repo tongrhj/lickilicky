@@ -3,6 +3,7 @@ import { parse, addDays, endOfDay } from "date-fns";
 import { BeyondDeal } from "./burpple";
 import { LickilickyVenue } from "./lickilicky";
 import { daysBetween } from "../helpers";
+import chunk from "lodash/chunk";
 
 type VenueFilter = "RETURNING" | "NEWLY_ADDED" | "CHANGED_DEALS";
 
@@ -79,6 +80,22 @@ ${
     }
   }
 
+  _makeCombinedNewlyAdded(venues: Array<LickilickyVenue>): Notification {
+    if (!venues || !venues.length) return null;
+    const groupedLinks = venues
+      .map(
+        (venue) =>
+          `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
+      )
+      .join(`, `);
+    const caption = `✨ New: ✨ ${groupedLinks}
+
+@Burpple #BeyondUpdates`;
+    return {
+      caption,
+    };
+  }
+
   _makeReturning(venue: LickilickyVenue): Notification {
     const flavorText = `Welcome back: 🎉 <strong>${venue.name}</strong> 🎉`;
     const deals =
@@ -118,6 +135,22 @@ ${
         caption,
       };
     }
+  }
+
+  _makeCombinedReturning(venues: Array<LickilickyVenue>): Notification {
+    if (!venues || !venues.length) return null;
+    const groupedLinks = venues
+      .map(
+        (venue) =>
+          `<a href="https://burpple.com/${venue.url}">${venue.name}</a>`
+      )
+      .join(`, `);
+    const caption = `🎉 Welcome back: 🎉 ${groupedLinks}
+
+@Burpple #BeyondUpdates`;
+    return {
+      caption,
+    };
   }
 
   _makeDealsChanged(
@@ -167,13 +200,6 @@ ${
     }
   }
 
-  _makeIndividualRemoved(venue: LickilickyVenue): Notification {
-    const lagInDays = daysBetween(venue.time_first_added, Date.now());
-    return {
-      caption: `Goodbye 👋 <a href="https://burpple.com/${venue.url}">${venue.name}</a> Hope to see you soon back on @Burpple #BeyondUpdates`,
-    };
-  }
-
   _makeCombinedRemoved(venues: Array<LickilickyVenue>): Notification | null {
     if (!venues || !venues.length) return null;
     const groupedLinks = venues
@@ -188,13 +214,8 @@ ${
     };
   }
 
-  _makeIndividualExpiring(venue: LickilickyVenue): Notification {
-    return {
-      caption: `🏃‍♀️ Hurry down to <a href="https://burpple.com/${venue.url}">${venue.name}</a> while you still can! The current deals are valid till ${venue.expiryDate} on @Burpple #BeyondUpdates`,
-    };
-  }
-
   _makeCombinedExpiring(venues: Array<LickilickyVenue>): Notification {
+    if (!venues || !venues.length) return null;
     const groupedLinks = venues
       .map(
         (venue) =>
@@ -210,20 +231,32 @@ ${
     const venuesAddedSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.newly_added
     );
-    if (venuesAddedSinceLastRun.length > 12) {
+    if (venuesAddedSinceLastRun.length > 20) {
       throw new Error("Too many new venues! Handle manually");
+    } else if (venuesAddedSinceLastRun.length > 4) {
+      const batched = chunk(venuesAddedSinceLastRun, 10);
+      return batched.map((batch) => this._makeCombinedNewlyAdded(batch));
+    } else {
+      return venuesAddedSinceLastRun
+        .map((venue) => this._makeNewlyAdded(venue))
+        .filter(Boolean);
     }
-    return venuesAddedSinceLastRun.map(this._makeNewlyAdded);
   }
 
   returning(): Array<Notification> {
     const venuesReturningSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.returning
     );
-    if (venuesReturningSinceLastRun.length > 12) {
+    if (venuesReturningSinceLastRun.length > 20) {
       throw new Error("Too many venues returning! Handle manually");
+    } else if (venuesReturningSinceLastRun.length > 4) {
+      const batched = chunk(venuesReturningSinceLastRun, 10);
+      return batched.map((batch) => this._makeCombinedReturning(batch));
+    } else {
+      return venuesReturningSinceLastRun
+        .map((venue) => this._makeReturning(venue))
+        .filter(Boolean);
     }
-    return venuesReturningSinceLastRun.map(this._makeReturning);
   }
 
   removed(): Array<Notification> {
@@ -239,11 +272,13 @@ ${
         );
       }
     );
-    if (venuesRemovedSinceLastRun.length > 12) {
+    if (venuesRemovedSinceLastRun.length > 20) {
       throw new Error("Too many venues removed! Handle manually");
     } else {
-      const result = this._makeCombinedRemoved(venuesRemovedSinceLastRun);
-      return result ? [result] : [];
+      const batched = chunk(venuesRemovedSinceLastRun, 10);
+      return batched
+        .map((batch) => this._makeCombinedRemoved(batch))
+        .filter(Boolean);
     }
   }
 
@@ -281,7 +316,7 @@ ${
         };
       });
 
-    return venuesWithDealsChanged.map(this._makeDealsChanged);
+    return venuesWithDealsChanged.map(this._makeDealsChanged).filter(Boolean);
   }
 
   expiring(): Array<Notification> {
@@ -297,10 +332,13 @@ ${
         );
       }
     });
-    if (venuesExpiring.length > 3) {
-      return [this._makeCombinedExpiring(venuesExpiring)];
+    if (venuesExpiring.length > 20) {
+      throw new Error("Too many venues expiring! Handle manually");
     } else {
-      return venuesExpiring.map(this._makeIndividualExpiring);
+      const batched = chunk(venuesExpiring, 10);
+      return batched
+        .map((batch) => this._makeCombinedExpiring(batch))
+        .filter(Boolean);
     }
   }
 }
