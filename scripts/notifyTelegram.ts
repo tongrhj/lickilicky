@@ -36,6 +36,7 @@ const notifyTelegram = async ({
     for (const chatId of chatIds) {
       combinedPromises = combinedPromises.concat(
         notificationsToSend.map((n) => async () => {
+          if (!n) return;
           await NotificationService.sendNotification(n, chatId);
         })
       );

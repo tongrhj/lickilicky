@@ -80,7 +80,7 @@ ${
     }
   }
 
-  _makeCombinedNewlyAdded(venues: Array<LickilickyVenue>): Notification {
+  _makeCombinedNewlyAdded(venues: Array<LickilickyVenue>): Notification | null {
     if (!venues || !venues.length) return null;
     const groupedLinks = venues
       .map(
@@ -137,7 +137,7 @@ ${
     }
   }
 
-  _makeCombinedReturning(venues: Array<LickilickyVenue>): Notification {
+  _makeCombinedReturning(venues: Array<LickilickyVenue>): Notification | null {
     if (!venues || !venues.length) return null;
     const groupedLinks = venues
       .map(
@@ -214,7 +214,7 @@ ${
     };
   }
 
-  _makeCombinedExpiring(venues: Array<LickilickyVenue>): Notification {
+  _makeCombinedExpiring(venues: Array<LickilickyVenue>): Notification | null {
     if (!venues || !venues.length) return null;
     const groupedLinks = venues
       .map(
@@ -227,7 +227,7 @@ ${
     };
   }
 
-  newlyAdded(): Array<Notification> {
+  newlyAdded(): Array<Notification | null> {
     const venuesAddedSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.newly_added
     );
@@ -235,15 +235,17 @@ ${
       throw new Error("Too many new venues! Handle manually");
     } else if (venuesAddedSinceLastRun.length > 4) {
       const batched = chunk(venuesAddedSinceLastRun, 10);
-      return batched.map((batch) => this._makeCombinedNewlyAdded(batch));
-    } else {
-      return venuesAddedSinceLastRun
-        .map((venue) => this._makeNewlyAdded(venue))
+      return batched
+        .map((batch) => this._makeCombinedNewlyAdded(batch))
         .filter(Boolean);
+    } else {
+      return venuesAddedSinceLastRun.map((venue) =>
+        this._makeNewlyAdded(venue)
+      );
     }
   }
 
-  returning(): Array<Notification> {
+  returning(): Array<Notification | null> {
     const venuesReturningSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.returning
     );
@@ -251,7 +253,9 @@ ${
       throw new Error("Too many venues returning! Handle manually");
     } else if (venuesReturningSinceLastRun.length > 4) {
       const batched = chunk(venuesReturningSinceLastRun, 10);
-      return batched.map((batch) => this._makeCombinedReturning(batch));
+      return batched
+        .map((batch) => this._makeCombinedReturning(batch))
+        .filter(Boolean);
     } else {
       return venuesReturningSinceLastRun
         .map((venue) => this._makeReturning(venue))
@@ -259,7 +263,7 @@ ${
     }
   }
 
-  removed(): Array<Notification> {
+  removed(): Array<Notification | null> {
     const venuesRemovedSinceLastRun = this.removedVenues.filter(
       (venue: LickilickyVenue) => {
         // Removed venues have to been added more than 3 days ago
@@ -319,7 +323,7 @@ ${
     return venuesWithDealsChanged.map(this._makeDealsChanged).filter(Boolean);
   }
 
-  expiring(): Array<Notification> {
+  expiring(): Array<Notification | null> {
     const oneWeekFromNowEnd = endOfDay(addDays(new Date(), 7));
     const oneWeekFromNowStart = endOfDay(addDays(new Date(), 6));
     const venuesExpiring = this.updatedVenues.filter((venue) => {
