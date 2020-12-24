@@ -5,8 +5,6 @@ import { LickilickyVenue } from "./lickilicky";
 import { daysBetween } from "../helpers";
 import chunk from "lodash/chunk";
 
-type VenueFilter = "RETURNING" | "NEWLY_ADDED" | "CHANGED_DEALS";
-
 const mapVenueToGoogleMapsParams = (venue: LickilickyVenue): string =>
   queryString.stringify({
     api: 1,
@@ -18,9 +16,9 @@ export type Notification = {
   photo?: string;
 };
 
-type LickilickyVenueWithPreviousDeals = LickilickyVenue & {
-  previous_deals: Array<BeyondDeal>;
-};
+// type LickilickyVenueWithPreviousDeals = LickilickyVenue & {
+//   previous_deals: Array<BeyondDeal>;
+// };
 
 class Notifications {
   updatedVenues: Array<LickilickyVenue>;
