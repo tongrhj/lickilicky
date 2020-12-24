@@ -250,7 +250,10 @@ ${
       (venue) => venue.returning
     );
     if (venuesReturningSinceLastRun.length > 20) {
-      throw new Error("Too many venues returning! Handle manually");
+      console.error(
+        `Too many venues returning! Handle manually: ${venuesReturningSinceLastRun.length}`
+      );
+      return [];
     } else if (venuesReturningSinceLastRun.length > 4) {
       const batched = chunk(venuesReturningSinceLastRun, 10);
       return batched
@@ -277,7 +280,10 @@ ${
       }
     );
     if (venuesRemovedSinceLastRun.length > 20) {
-      throw new Error("Too many venues removed! Handle manually");
+      console.error(
+        `Too many venues removed! Handle manually: ${venuesRemovedSinceLastRun.length}`
+      );
+      return [];
     } else {
       const batched = chunk(venuesRemovedSinceLastRun, 10);
       return batched
@@ -337,7 +343,10 @@ ${
       }
     });
     if (venuesExpiring.length > 20) {
-      throw new Error("Too many venues expiring! Handle manually");
+      console.error(
+        `Too many venues expiring! Handle manually: ${venuesExpiring.length}`
+      );
+      return [];
     } else {
       const batched = chunk(venuesExpiring, 10);
       return batched
