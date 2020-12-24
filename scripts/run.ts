@@ -4,15 +4,28 @@ import notifyTelegram from "./notifyTelegram";
 try {
   (async () => {
     const result = await updateVenues();
-    let chatIds: Array<string> = [];
     const BurppleBeyondFans = process.env.TELEGRAM_CHAT_ID;
-    if (!!BurppleBeyondFans) chatIds.push(BurppleBeyondFans);
+    if (!!BurppleBeyondFans) {
+      await notifyTelegram({
+        ...result,
+        chatIds: [BurppleBeyondFans],
+        modules: [
+          "newlyAdded",
+          "returning",
+          "removed",
+          "dealsChanged",
+          "expiring",
+        ],
+      });
+    }
     const OfficialBurppleChannel = process.env.TELEGRAM_CHAT_ID_2;
-    if (!!OfficialBurppleChannel) chatIds.push(OfficialBurppleChannel);
-    await notifyTelegram({
-      ...result,
-      chatIds,
-    });
+    if (!!OfficialBurppleChannel) {
+      await notifyTelegram({
+        ...result,
+        chatIds: [OfficialBurppleChannel],
+        modules: ["newlyAdded", "returning", "dealsChanged", "expiring"],
+      });
+    }
     console.log("[ FINISH ]");
   })();
 } catch (e) {
