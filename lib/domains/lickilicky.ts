@@ -65,9 +65,9 @@ class Lickilicky {
     if (!process.env.PARSED_VENUE_URL) {
       throw new Error(`Missing required process.env.PARSED_VENUE_URL`);
     }
-    const existingLickilickyVenueResponse: Array<
-      LickilickyVenue
-    > | null = await got(process.env.PARSED_VENUE_URL).json();
+    const existingLickilickyVenueResponse: Array<LickilickyVenue> | null = await got(
+      process.env.PARSED_VENUE_URL
+    ).json();
     if (!existingLickilickyVenueResponse)
       throw new Error("Missing existingLickilickyVenueResponse");
     console.log("Get full list of venues from Lickilicky......");
@@ -111,16 +111,25 @@ class Lickilicky {
       ["beyond", "venue_additional_info", 0, "title"],
       null
     );
-    const expiryDate = expiryString
-      ? format(
-          parse(
-            expiryString.replace("All deals valid till ", ""),
-            "d MMM yyyy",
-            new Date()
-          ),
-          "d MMM yyyy"
-        )
-      : null;
+    let expiryDate = null;
+    try {
+      // This is expected to fail during special occasions.
+      // Instead of an expiry string, the Burpple API returns
+      // "Deals are not available on New Year's Eve. for example"
+      expiryDate = expiryString
+        ? format(
+            parse(
+              expiryString.replace("All deals valid till ", ""),
+              "d MMM yyyy",
+              new Date()
+            ),
+            "d MMM yyyy"
+          )
+        : null;
+    } catch (e) {
+      // console.log(e)
+      // console.log(JSON.stringify(burppleVenue))
+    }
 
     return {
       ...partialVenue,
