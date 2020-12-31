@@ -18,6 +18,10 @@ npm run build
   - Sends notifications to Telegram with the diff formatted for chat
 - `npm run frontend`: Copies relevant frontend files to `dist` folder
 
+```
+npm run deploy [NOW_TOKEN]
+```
+
 ## Feel good food feed
 
 - Subscribe for updates at [Telegram Channel Burpple](https://t.me/burpple)
