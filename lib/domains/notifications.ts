@@ -229,9 +229,7 @@ ${
     const venuesAddedSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.newly_added
     );
-    if (venuesAddedSinceLastRun.length > 20) {
-      throw new Error("Too many new venues! Handle manually");
-    } else if (venuesAddedSinceLastRun.length > 4) {
+    if (venuesAddedSinceLastRun.length > 4) {
       const batched = chunk(venuesAddedSinceLastRun, 10);
       return batched
         .map((batch) => this._makeCombinedNewlyAdded(batch))
@@ -247,12 +245,7 @@ ${
     const venuesReturningSinceLastRun = this.updatedVenues.filter(
       (venue) => venue.returning
     );
-    if (venuesReturningSinceLastRun.length > 20) {
-      console.error(
-        `Too many venues returning! Handle manually: ${venuesReturningSinceLastRun.length}`
-      );
-      return [];
-    } else if (venuesReturningSinceLastRun.length > 4) {
+    if (venuesReturningSinceLastRun.length > 4) {
       const batched = chunk(venuesReturningSinceLastRun, 10);
       return batched
         .map((batch) => this._makeCombinedReturning(batch))
@@ -277,17 +270,10 @@ ${
         );
       }
     );
-    if (venuesRemovedSinceLastRun.length > 20) {
-      console.error(
-        `Too many venues removed! Handle manually: ${venuesRemovedSinceLastRun.length}`
-      );
-      return [];
-    } else {
-      const batched = chunk(venuesRemovedSinceLastRun, 10);
-      return batched
-        .map((batch) => this._makeCombinedRemoved(batch))
-        .filter(Boolean);
-    }
+    const batched = chunk(venuesRemovedSinceLastRun, 10);
+    return batched
+      .map((batch) => this._makeCombinedRemoved(batch))
+      .filter(Boolean);
   }
 
   dealsChanged(): Array<Notification> {

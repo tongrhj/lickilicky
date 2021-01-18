@@ -81,6 +81,7 @@ class Lickilicky {
     if (alreadyHydrated) return partialVenue;
 
     const burppleVenue = await this.Burpple.getVenue(partialVenue.id);
+    // console.log(JSON.stringify(burppleVenue))
     const banner_url = get(burppleVenue, ["images", 0, "medium_url"], "");
     const categories: Array<string> = burppleVenue.categories
       .map((ctg) => ctg.name)
@@ -147,23 +148,28 @@ class Lickilicky {
   ): Promise<Array<LickilickyVenue>> {
     console.log("Hydrating all venues......");
     const newVenues: Array<LickilickyVenue> = [];
-    const promises = partialVenues.map((v) => this._hydrateVenue(v));
-    let chunkedPromises = chunk(promises, 1);
+    const promises = partialVenues;
+    let chunkedVenues = chunk(partialVenues, 5);
     let percentage = 0;
-    for (let [index, chunk] of chunkedPromises.entries()) {
+    for (let [index, chunk] of chunkedVenues.entries()) {
       // start random progress
-      const newPercentage = Math.floor((index / chunkedPromises.length) * 100);
+      const newPercentage = Math.floor((index / chunkedVenues.length) * 100);
       if (
-        newPercentage - percentage > Math.random() * 50 &&
+        newPercentage - percentage > Math.random() * 25 &&
         newPercentage !== 100
       ) {
         console.log(`...${newPercentage}%`);
         percentage = newPercentage;
       }
       // end random progress
-      const results = await Promise.all(chunk);
+      const results = await Promise.all(
+        chunk.map((v) => this._hydrateVenue(v))
+      );
       results.forEach((result) => newVenues.push(result));
-      await sleep(1000 * Math.pow(2, Math.random()) + Math.random() * 100);
+      const sleepDuration =
+        1000 * Math.pow(2, Math.random()) + Math.random() * 100;
+      // console.log(`Sleeping for ${sleepDuration} ms`)
+      await sleep(sleepDuration);
     }
     console.log("...100%");
     return newVenues;
