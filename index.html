@@ -136,8 +136,7 @@
   }
 </style>
 <header>
-  <div>Active Merchants:&nbsp;<span id="count">213</span></div>
-  <div>Last Updated:&nbsp;<span id="last-updated-date">Sep 23, 2018</span></div>
+  <div>Active Merchants:&nbsp;<span id="count">0</span></div>
 </header>
 
 <section id="search">
@@ -186,7 +185,7 @@
   var $searchbox = document.getElementById("searchbox");
   var current = {};
   var sortFuncs = {
-    name: function(a, b) {
+    name: function (a, b) {
       if (a.name > b.name) {
         return 1;
       } else if (a.name < b.name) {
@@ -195,7 +194,7 @@
         return 0;
       }
     },
-    price: function(a, b) {
+    price: function (a, b) {
       function extractPrice(formatted_price) {
         var price =
           (formatted_price && formatted_price.match(/\d/g).join("")) || 0;
@@ -203,7 +202,7 @@
       }
       return extractPrice(a.formatted_price) - extractPrice(b.formatted_price);
     },
-    nearby: function(a, b) {
+    nearby: function (a, b) {
       function haversineDistance(p1, p2) {
         var atan2 = Math.atan2;
         var cos = Math.cos;
@@ -235,34 +234,34 @@
       }
       var origin = {
         latitude: current.coords.latitude,
-        longitude: current.coords.longitude
+        longitude: current.coords.longitude,
       };
       return (
         haversineDistance(origin, a.location) -
         haversineDistance(origin, b.location)
       );
-    }
+    },
   };
   var filterFuncs = {
-    new: function(a) {
+    new: function (a) {
       return a.newly_added;
     },
-    knownPriceRange: function(a) {
+    knownPriceRange: function (a) {
       return a.formatted_price;
     },
-    active: function(a) {
+    active: function (a) {
       return !a.removed;
     },
-    removed: function(a) {
+    removed: function (a) {
       return a.removed;
-    }
+    },
   };
   function setupSearch() {
     if (!elasticlunr) {
       console.error("Make sure elasticlunr loads before setupSearch");
       return;
     }
-    searchIndex = elasticlunr(function() {
+    searchIndex = elasticlunr(function () {
       this.addField("name");
       this.addField("formatted_price");
       this.addField("location_neighbourhood");
@@ -270,7 +269,7 @@
     });
   }
   function setDocsForSearch(searchData) {
-    searchData.forEach(function(searchDatum) {
+    searchData.forEach(function (searchDatum) {
       searchIndex.addDoc({
         id: searchDatum.id,
         name: searchDatum.name,
@@ -281,21 +280,21 @@
         categories: searchDatum.categories,
         formatted_price: searchDatum.formatted_price,
         location: {
-          neighbourhood: searchDatum.location.neighbourhood
+          neighbourhood: searchDatum.location.neighbourhood,
         },
         location_neighbourhood: searchDatum.location.neighbourhood,
-        url: searchDatum.url
+        url: searchDatum.url,
       });
     });
   }
   function debounce(fn) {
     var timeout;
-    return function() {
+    return function () {
       var args = Array.prototype.slice.call(arguments),
         ctx = this;
 
       clearTimeout(timeout);
-      timeout = setTimeout(function() {
+      timeout = setTimeout(function () {
         fn.apply(ctx, args);
       }, 300);
     };
@@ -310,7 +309,7 @@
       prettyRemovalDate = prettyRemovalDate.toLocaleDateString("en-GB", {
         day: "numeric",
         month: "long",
-        year: "2-digit"
+        year: "2-digit",
       });
     }
 
@@ -341,7 +340,7 @@
     );
   }
   function getPosition(options) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       navigator.geolocation.getCurrentPosition(resolve, reject, options);
     });
   }
@@ -362,7 +361,7 @@
         // beware here be async !!
         // thread continues execution without waiting for cb !!
         return getPosition({ timeout: 10000 })
-          .then(function(position) {
+          .then(function (position) {
             // success callback function
             if (currentlyViewedFn !== "nearby") {
               current = position;
@@ -379,7 +378,7 @@
             }
             return Promise.resolve(nearbyListCache);
           })
-          .catch(function(err) {
+          .catch(function (err) {
             if (currentlyViewedFn === "nearby") {
               $list.innerHTML = err;
             } else {
@@ -407,7 +406,7 @@
     $list.innerHTML = html;
   }
   function asyncRenderList(fn) {
-    asyncConvertListToHTML(fn).then(function(results) {
+    asyncConvertListToHTML(fn).then(function (results) {
       renderListHTML(results);
     });
   }
@@ -416,7 +415,7 @@
     $count.innerText = "" + data.length;
   }
 
-  xhr.onload = function() {
+  xhr.onload = function () {
     rawData = JSON.parse(this.responseText);
     data = rawData.filter(filterFuncs["active"]);
     if (!rawData || !data) {
@@ -443,7 +442,7 @@
   // Sort and Filter
   $controls.addEventListener(
     "change",
-    function(e) {
+    function (e) {
       currentlyViewedFn = e.target.value;
       asyncRenderList(currentlyViewedFn);
     },
@@ -456,7 +455,7 @@
   // Search
   $searchbox.addEventListener(
     "keyup",
-    debounce(function() {
+    debounce(function () {
       var query = $searchbox.value;
       var results = [];
       if (query && query.length) {
@@ -464,12 +463,12 @@
           fields: {
             name: { boost: 2, expand: true },
             location_neighbourhood: { boost: 1, expand: true },
-            formatted_price: { expand: true }
-          }
+            formatted_price: { expand: true },
+          },
         });
         if (results.length) {
           var html = results
-            .map(function(result) {
+            .map(function (result) {
               return result.doc;
             })
             .map(convertListItemToHTML)
