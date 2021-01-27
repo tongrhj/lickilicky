@@ -211,7 +211,9 @@ class BurppleBeyond {
       `https://app.burpple.com/p1/beyond/venues?auth_token=${this.token}`,
       {
         headers: {
-          "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond",
+          // User agent is necessary to pass third party security app's checks (Sqreen)
+          "user-agent":
+            "Burpple/7.3.11 (com.burpple.getbeta; build:10343; iOS 14.4.0) Alamofire/5.1.0",
         },
       }
     ).json();
@@ -225,7 +227,8 @@ class BurppleBeyond {
       `https://app.burpple.com/p1/venues/${id}?auth_token=${this.token}`,
       {
         headers: {
-          "user-agent": "Burpple Beyond Fans https://t.me/burpplebeyond",
+          "user-agent":
+            "Burpple/7.3.11 (com.burpple.getbeta; build:10343; iOS 14.4.0) Alamofire/5.1.0",
         },
         // @ts-ignore
         cookieJar: this.cookieJar(),
