@@ -26,7 +26,7 @@
   "devDependencies": {
     "@types/lodash": "^4.14.166",
     "@types/tough-cookie": "^4.0.0",
-    "got": "^11.8.1",
+    "got": "^11.8.5",
     "husky": "^4.3.6",
     "prettier": "^2.2.1",
     "pretty-quick": "^3.1.0",
