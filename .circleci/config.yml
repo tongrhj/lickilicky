@@ -58,16 +58,16 @@ jobs:
       - run: npm run test
 workflows:
   version: 2
-  daily:
-    triggers:
-      - schedule:
-          cron: "0 1 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - execute
+#   daily:
+#     triggers:
+#       - schedule:
+#           cron: "0 1 * * *"
+#           filters:
+#             branches:
+#               only:
+#                 - master
+#     jobs:
+#       - execute
   linting:
     jobs:
       - test
